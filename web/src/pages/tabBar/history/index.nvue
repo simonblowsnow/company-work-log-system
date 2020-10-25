@@ -1,0 +1,232 @@
+<template>
+	<view style="padding: 2px 0px">
+		
+		<view class="uni-hello-text">
+			
+			<uni-section title="工作内容" type="line"></uni-section>
+
+			<uni-collapse ref="add" class="warp" v-for="(job, idx) in jobs"> 
+				<uni-collapse-item :open="job.open" :show-animation="job.animation" title="工作1" style="color: #000!important; ">
+					<view class="" style="padding: 2px 0px">
+						<view class="uni-title formLine" style="font-size: 16px; padding-left: 20px; color: #888; text-align: left">类型</view>
+						<view style="font-size: 14px; margin-bottom: 15px; text-align: center; font-family: fangsong;">
+							<radio-group @change="jobTypeChange($event, job)">
+								<label class="radio" v-for="(item, index) in jobTypes" :key="item.value">
+									<radio :value="item.value" :checked="item.value === job.type" />
+									{{item.name}}
+								</label>
+							</radio-group>
+						</view>
+						<uni-combox class="formLine" style="" label="项目" labelWidth="70px" :candidates="Object.keys(projects)"
+								v-model="job.project" placeholder="请选择项目"></uni-combox>
+						<uni-combox class="formLine" label="模块" labelWidth="70px" :candidates="Object.keys(modules[job.project] || [])"
+								v-model="job.module" placeholder="请选择模块"></uni-combox>
+						<uni-combox class="formLine" label="任务" labelWidth="70px" :candidates="Object.keys(modules[job.project] || [])"
+								v-model="job.module" placeholder="请选择模块"></uni-combox>
+
+						<view class="uni-flex uni-row">
+							<label style="width: 9%; float: left">11111</label>
+							<slider style="float: left; width: 90%" :value="job.progress" @change="progressChange($event, job)" min="0" max="100" show-value />
+						</view>
+
+						<label labelWidth="70px">
+							
+							
+						</label>
+
+
+						<view class="uni-flex uni-row">
+							<view class="flex-item uni-bg-red">A</view>
+							<view class="flex-item uni-bg-green">B</view>
+							<view class="flex-item uni-bg-blue">C</view>
+						</view>
+						
+						
+
+						<view class="uni-title" style="padding-left: 22px; font-size: 16px; color: #999;">进度
+							<view>
+								<label ><slider :value="job.progress" @change="progressChange($event, job)" min="0" max="100" show-value /></label>
+								
+							</view>
+						</view>
+						<view class="uni-title" style="font-size: 14px; color: #999; text-align: left; padding-left: 23px;font-family: fangsong;">备注</view>
+						<view class="uni-textarea" style="margin: 2px 20px">
+							<textarea placeholder-style="color:#ccc" placeholder="若任务较详细，此项非必填"/>
+						</view>
+
+					</view>
+
+					
+
+					
+
+					<!-- <text class="content">文本</text> -->
+
+
+
+				</uni-collapse-item>
+			</uni-collapse>
+
+
+			<!--
+				@change="change"
+
+			-->
+			<!-- <uni-section title="通栏卡片" type="line"></uni-section>
+			<view class="example-body">
+
+				<view class="example-box">
+					<uni-card title="标题文字" :isFull="true" isShadow='true' note="额外信息" extra="额外信息" @click="clickCard"><text class="content-box-text">通栏卡片，左右上下没有间距，用户可自定义卡片距离等信息</text></uni-card>
+				</view>
+			</view> -->
+		</view>
+	</view>
+</template>
+<script>
+	
+	export default {
+		components: {
+			
+		},
+		data() {
+			return {
+				jobTypes: [{
+					name: '项目',
+					value: 'project'
+				}, {
+					name: '临时',
+					value: 'temp'
+				}, {
+					name: '会议',
+					value: 'meeting'
+				}, {
+					name: '外出',
+					value: 'out'
+				}, {
+					name: '其它',
+					value: 'other'
+				}
+				],
+				jobs: [{
+					'open': true,
+					'animation': true,
+					'type': 'project',
+					'project': "",	// 级别1
+					'module': "",	// 级别2
+					'preProgress': 60,
+					'progress': 60
+				}],
+				projects: {
+					'项目1': {
+						key: '001'
+					},
+					'项目2': {
+						key: '002'
+					}
+				},
+				modules: {
+					'项目1': {
+						'任务1': {
+							progress: 0.5
+						}, 
+						'任务2': {
+							progress: 0.8
+						}
+					}
+				},
+				navigateFlag: false
+			}
+		},
+		onLoad() {},
+		onReady() {},
+		onShareAppMessage() {
+			return {
+				title: '欢迎体验uni-app',
+				// path: '/pages/tabBar/template/template'
+			}
+		},
+		onNavigationBarButtonTap(e) {
+			uni.navigateTo({
+				url: '/pages/about/about'
+			});
+		},
+		methods: {
+			jobTypeChange (evt, job) {
+				for (let i = 0; i < this.jobTypes.length; i++) {
+					console.log(i);	
+					if (this.jobTypes[i].value === evt.target.value) {
+						job.type = evt.target.value;
+						break;
+					}
+				}
+				console.log(job);
+			},
+			progressChange (src, job) {
+				let value = src.target.value;
+				if (value < job.preProgress) {
+					job.progress = job.preProgress;
+					uni.showToast({
+						title: "当前进度不能小于历史值！ \n若有变更，请至项目管理中修改计划",
+						icon: 'none',
+						style: {
+							fontSize: "12px"
+						}
+					})
+				}
+				console.log(job);
+			},
+
+
+
+
+
+		}
+	}
+</script>
+
+<style>
+	
+	.flex-item {
+		width: 33.3%;
+		height: 200rpx;
+		text-align: center;
+		line-height: 200rpx;
+		float: left;
+	}
+
+	.flex-item-V {
+		width: 100%;
+		height: 150rpx;
+		float: left;
+		text-align: center;
+		line-height: 150rpx;
+	}
+
+	.text {
+		margin: 15rpx 10rpx;
+		padding: 0 20rpx;
+		background-color: #ebebeb;
+		height: 70rpx;
+		line-height: 70rpx;
+		text-align: center;
+		color: #777;
+		font-size: 26rpx;
+	}
+	
+	/* @import '../../../common/uni-nvue.css'; */
+	
+
+	.formLine { padding: 2px 10px; text-align: center}
+	
+	.example-body {
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		padding: 0;
+		font-size: 14px;
+		background-color: #ffffff;
+	}
+</style>

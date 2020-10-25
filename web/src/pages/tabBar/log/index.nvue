@@ -1,0 +1,258 @@
+<template>
+	<view style="padding: 2px 0px; background-color: #F5F5F5" >	
+		<uni-section title="工作内容" type="line">
+			<view class="uni-right" style="margin-right: 10px">
+				<uni-icons type="loop" size="20"></uni-icons>
+			</view>
+			<view class="uni-right">
+				<uni-icons type="plus" size="20"></uni-icons>
+			</view>
+		</uni-section>
+
+		<uni-collapse ref="add" class="warp" v-for="(job, idx) in jobs" :key="idx" style="background-color: #F5F5F5!important">
+			<!--滑动删除组件-->
+			<uni-swipe-action>
+				<uni-swipe-action-item :right-options="options" :auto-close="false" @change="changeRemove" @click="clickRemove">
+					<!--可折叠组件-->
+					<uni-collapse-item :open="job.open" :show-animation="job.animation" title="第一项" thumb="/static/number/1.png" style="color: #000!important; ">
+						<view class="" style="padding: 2px 0px">
+							<!-- 类型选择 -->
+							<view class="uni-title formLine" style="font-size: 30rpx; padding-left: 24px; color: #888; text-align: left">类型</view>
+							<view style="font-size: 27rpx; margin-bottom: 15px; text-align: center; font-family: fangsong;">
+								<radio-group @change="jobTypeChange($event, job)">
+									<label class="radio" v-for="(item, index) in jobTypes" :key="item.value" style="margin-right: 3px">
+										<radio :value="item.value" :checked="item.value === job.type" />
+										{{item.name}}
+									</label>
+								</radio-group>
+							</view>
+
+							<!-- 项目选择 -->
+							<uni-combox class="formLine" label="项目" labelWidth="70px" :candidates="Object.keys(projects)"
+										v-model="job.project" placeholder="请选择项目"/>
+							<uni-combox class="formLine" label="模块" labelWidth="70px"
+										:candidates="Object.keys(modules[job.project] || [])"
+										v-model="job.module" placeholder="请选择模块"/>
+							<uni-combox class="formLine" label="任务" labelWidth="70px"
+										:candidates="Object.keys(modules[job.project] || [])"
+										v-model="job.module" placeholder="请选择模块"/>
+
+							<view style="display: flex; flex-direction: row; margin-top: 6px; ">
+								<view style="height: 35px; flex: 0 0 100px; padding-left: 24px; font-size: 30rpx; color: #999;">进度</view>
+								<view style="height: 35px; flex: 1">
+									<slider v-model="job.progress" @change="progressChange($event, job, idx)" block-size=20 min="0" max="100" show-value />
+								</view>
+							</view>
+
+							<!-- 备注 -->
+							<view class="uni-title" style="font-size: 30rpx; color: #999; text-align: left; padding: 2px 24px;font-family: fangsong;">备注</view>
+							<view class="uni-textarea" style="margin: 10px 10px 10px 25px">
+								<textarea style="background: #fff; width: 100%; height: 75px;font-size: 30rpx"
+										  placeholder-style="color:#ccc" placeholder="若任务较详细，此项非必填"/>
+							</view>
+
+						</view>
+					</uni-collapse-item>
+				</uni-swipe-action-item>
+			</uni-swipe-action>
+		</uni-collapse>
+		
+
+		<uni-section title="工作计划" type="line">
+
+			<view class="uni-right">
+				<uni-icons type="plus" size="20"></uni-icons>
+			</view>
+		</uni-section>
+
+
+
+	</view>
+</template>
+<script>
+	// import uLink from '@/components/uLink.vue'
+	import uniBadge from "@/components/uni-badge/uni-badge.vue"
+	import uniList from "@/components/uni-list/uni-list.vue"
+	import uniIcons from "@/components/uni-icons/uni-icons.vue"
+
+	export default {
+		components: {
+			uniBadge,
+			uniList,
+			uniIcons
+			// uLink
+		},
+		data() {
+			return {
+
+				options: [{
+					text: '取消',
+					style: {
+						backgroundColor: '#007aff'
+					}
+				},
+					{
+						text: '确认',
+						style: {
+							backgroundColor: '#dd524d'
+						}
+					}
+				],
+				ts: 2, 
+				jobTypes: [{
+					name: '项目',
+					value: 'project'
+				}, {
+					name: '临时',
+					value: 'temp'
+				}, {
+					name: '会议',
+					value: 'meeting'
+				}, {
+					name: '外出',
+					value: 'out'
+				}, {
+					name: '其它',
+					value: 'other'
+				}
+				],
+				jobs: [{
+					'open': true,
+					'animation': true,
+					'type': 'project',
+					'project': "",	// 级别1
+					'module': "",	// 级别2
+					'preProgress': 60,
+					'progress': 60
+				}],
+				projects: {
+					'项目1': {
+						key: '001'
+					},
+					'项目2': {
+						key: '002'
+					}
+				},
+				modules: {
+					'项目1': {
+						'任务1': {
+							progress: 0.5
+						}, 
+						'任务2': {
+							progress: 0.8
+						}
+					}
+				},
+				navigateFlag: false
+			}
+		},
+		onLoad() {},
+		onReady() {},
+		onShareAppMessage() {
+			return {
+				title: '欢迎体验uni-app',
+				// path: '/pages/tabBar/template/template'
+			}
+		},
+		onNavigationBarButtonTap(e) {
+			uni.navigateTo({
+				url: '/pages/about/about'
+			});
+		},
+		methods: {
+			jobTypeChange (evt, job) {
+				for (let i = 0; i < this.jobTypes.length; i++) {
+					console.log(i);	
+					if (this.jobTypes[i].value === evt.target.value) {
+						job.type = evt.target.value;
+						break;
+					}
+				}
+				console.log(job);
+			},
+			progressChange (src, job, idx) {
+				let value = src.target.value;
+				if (value < job.preProgress) {
+					// job.progress = job.preProgress;
+					this.$set(job, 'progress', 1);
+					// this.$set(this.jobs[idx], 'progress', 2);
+					// this.$set(job, 'progress', 2);
+					// job.progress = 1;
+					this.ts = 6;
+					uni.showToast({
+						title: "当前进度不能小于历史值！ \n若有变更，请至项目管理中修改计划",
+						icon: 'none',
+						style: {
+							fontSize: "12px"
+						}
+					});
+
+				}
+				this.$forceUpdate();
+				console.log(job);
+				console.log(this.jobs[idx]);
+			},
+			changeRemove () {
+
+			},
+			clickRemove () {
+
+			}
+
+
+
+
+		}
+	}
+</script>
+
+<style>
+	
+	
+
+	.flex-item {
+		width: 33.3%;
+		height: 200rpx;
+		text-align: center;
+		line-height: 200rpx;
+		float: left;
+	}
+
+	.flex-item-V {
+		width: 100%;
+		height: 150rpx;
+		float: left;
+		text-align: center;
+		line-height: 150rpx;
+	}
+
+	.text {
+		margin: 15rpx 10rpx;
+		padding: 0 20rpx;
+		background-color: #ebebeb;
+		height: 70rpx;
+		line-height: 70rpx;
+		text-align: center;
+		color: #777;
+		font-size: 26rpx;
+	}
+	
+	@import '../../../common/uni-nvue.css';
+	
+	.formLine { 
+		font-family: 'emoji';
+		padding: 2px 10px; text-align: center
+	}
+	
+	.example-body {
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		padding: 0;
+		font-size: 26rpx;
+		background-color: #ffffff;
+	}
+</style>

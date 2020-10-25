@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+encoding//src/common/cache.py=utf8
+encoding//src/common/key.py=utf8
+encoding//src/common/response.py=utf8
+encoding//src/config.py=utf8
+encoding//src/libs/database.py=utf8
+encoding//src/libs/log.py=utf8
+encoding//src/libs/redis2.py=utf8
+encoding//src/libs/utils.py=utf8
+encoding//src/login.py=utf8
+encoding//src/main.py=utf8

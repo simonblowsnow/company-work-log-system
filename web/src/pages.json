@@ -1,0 +1,129 @@
+{
+	"pages": [
+		// pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/tabBar/log/index",
+			"style": {
+				"navigationBarTitleText": "工作日志",
+				"app-plus": {
+					"bounce": "vertical",
+					"titleNView": {
+						"buttons": [{
+							"text": "\ue442",
+							"fontSrc": "/static/uni.ttf",
+							"fontSize": "24px",
+							"color": "#FFFFFF"
+						}, {
+							"text": "提交",
+							"fontSize": "16px",
+							"fontFamily": "fantasy",
+							"color": "#FFFFFF",
+							"border": 1
+						}]
+					}
+				}
+			}
+		},
+		{
+			"path": "pages/tabBar/project/index",
+			"style": {
+				"navigationBarTitleText": "项目库",
+				"app-plus": {
+					"bounce": "vertical",
+					"titleNView": {
+						"buttons": [{
+							"text": "\ue560",
+							"fontSrc": "/static/uni.ttf",
+							"fontSize": "18px",
+							"color": "#FFFFFF"
+						}, {
+							"text": "切换",
+							"fontSize": "14px",
+							"fontFamily": "fantasy",
+							"color": "#FFFFFF",
+							"border": 1
+						}]
+					}
+				}
+			}
+		},
+		{
+			"path": "pages/tabBar/history/index",
+			"style": {
+				"navigationBarTitleText": "历史日志",
+				"app-plus": {
+					"bounce": "vertical",
+					"titleNView": {
+						"buttons": [{
+							"text": "\ue534",
+							"fontSrc": "/static/uni.ttf",
+							"fontSize": "22px",
+							"color": "#FFFFFF"
+						}]
+					}
+				}
+			}
+		},
+		{
+			"path": "pages/tabBar/template/template",
+			"style": {
+				"navigationBarTitleText": "个人中心",
+				"app-plus": {
+					"bounce": "vertical",
+					"titleNView": {
+						"buttons": [{
+							"text": "\ue534",
+							"fontSrc": "/static/uni.ttf",
+							"fontSize": "22px",
+							"color": "#FFFFFF"
+						}]
+					}
+				}
+			}
+		}
+	],	
+	"globalStyle": {
+		// #ifdef MP-360
+		"navigationStyle": "custom",
+		// #endif
+		"pageOrientation": "portrait",
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "Hello uniapp",
+		"navigationBarBackgroundColor": "#007AFF",
+		"backgroundColor": "#F8F8F8",
+		"backgroundColorTop": "#F4F5F6",
+		"backgroundColorBottom": "#F4F5F6",
+		"mp-360": {
+			"navigationStyle": "custom"
+		}
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#007AFF",
+		"borderStyle": "black",
+		"backgroundColor": "#F8F8F8",
+		"list": [{
+				"pagePath": "pages/tabBar/log/index",
+				"iconPath": "static/component.png",
+				"selectedIconPath": "static/componentHL.png",
+				"text": "日志填报"
+			},
+			{
+				"pagePath": "pages/tabBar/project/index",
+				"iconPath": "static/template.png",
+				"selectedIconPath": "static/componentHL.png",
+				"text": "项目任务"
+			}, {
+				"pagePath": "pages/tabBar/history/index",
+				"iconPath": "static/component.png",
+				"selectedIconPath": "static/componentHL.png",
+				"text": "历史记录"
+			}, {
+				"pagePath": "pages/tabBar/template/template",
+				"iconPath": "static/template.png",
+				"selectedIconPath": "static/templateHL.png",
+				"text": "个人中心"
+			}
+		]
+	}
+}

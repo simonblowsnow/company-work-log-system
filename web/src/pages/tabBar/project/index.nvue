@@ -1,0 +1,365 @@
+<template>
+	<view style="padding: 2px 0px">
+		<view style="display: flex; flex-direction: row; margin-bottom: 3px">
+			<view style="height: 50px; flex: 1; padding-left: 0px;">
+				<uni-search-bar radius="5" placeholder="搜索" @confirm="search" />
+			</view>
+			<view style="height: 50px; flex: 0 0 70px; padding: 15px 10px 0px 0px; ">
+				<view class="uni-right" style="" @click="clickDisplay" title="隐藏或展开项目列表">
+					<uni-icons type="list" size="25" style="text-align: right;"></uni-icons>
+				</view>
+			</view>
+		</view>
+
+		<view class="example-body" v-show="showProjects">
+			<!-- 因为swiper特性的关系，请指定swiper的高度 ，swiper的高度并不会被内容撑开-->
+			<swiper class="swiper" :indicator-dots="true">
+				<swiper-item>
+					<uni-grid :column="3" :highlight="true" @change="change">
+						<uni-grid-item v-for="(item, index) in list" :index="index" :key="index">
+							<view class="grid-item-box" style="text-align: center; color: #00f; font-weight: 500">
+								<text class="text">{{ item.text }}</text>
+							</view>
+						</uni-grid-item>
+					</uni-grid>
+				</swiper-item>
+				<swiper-item>
+					<uni-grid :column="3" :highlight="true" @change="change">
+						<uni-grid-item v-for="(item, index) in list" :index="index" :key="index">
+							<view class="grid-item-box">
+								
+								<text class="text">{{ item.text }}</text>
+							</view>
+						</uni-grid-item>
+					</uni-grid>
+				</swiper-item>
+			</swiper>
+
+		</view>
+
+		
+		<uni-collapse>
+			<uni-collapse-item :open="true" title="模块列表 - " thumb="">
+				<view class="tag-parent" style="height: 280rpx; text-align:left; overflow: auto">
+					<view class="tag-view">
+						<uni-tag :inverted="true" :circle="false" text="新建" type="primary" />
+					</view>
+					<view class="tag-view">
+						<uni-tag :inverted="true" text="标签" type="success" />
+					</view>
+					<view class="tag-view">
+						<uni-tag :inverted="true" text="标签" type="success" />
+					</view>
+					<view class="tag-view">
+						<uni-tag :inverted="true" text="标签" type="warning" />
+					</view>
+					<view class="tag-view">
+						<uni-tag :inverted="true" text="标签" type="error" />
+					</view>
+					<view class="tag-view">
+						<uni-tag :inverted="true" text="标签" type="error" />
+					</view>
+					<view class="tag-view">
+						<uni-tag :inverted="true" text="标签" type="error" />
+					</view>
+
+				</view>
+			
+			</uni-collapse-item>			
+		</uni-collapse>
+
+		
+		<uni-collapse>
+			<uni-collapse-item :open="true" title="任务列表" thumb="https://img-cdn-qiniu.dcloud.net.cn/new-page/uni.png"
+							   style="text-align: left">
+				<uni-list style="padding-left: 20px; padding-bottom: 150px">
+					<uni-list-item :show-extra-icon="true" :extra-icon="iconPlus" title="新建任务" />
+					<uni-list-item title="开启点击反馈" thumb="/static/number/1.png" thumb-size="base" rightText="默认"  @click="onClick" ></uni-list-item>
+
+				</uni-list>				
+				
+			
+			</uni-collapse-item>
+			
+		</uni-collapse>
+
+
+		<!--新建项目/模块-->
+		<uni-popup id="dialogInput" ref="dialogCreate" type="dialog" @change="change">
+			<view style="width: 100%; background: #fff; padding: 5px 20px; border-radius: 15px;" class="createPop">
+				<view style="text-align: center; margin: 15px 0px; color: #007aff"> 新建项目 </view>
+				<form @submit="submit" style="font-size: 14px">
+					<view class="uni-form-item uni-column" style="margin-bottom: 5px; display: flex; flex-direction: row; ">
+						<view class="title" style="flex: 0 0 60px; padding-top: 20px">项目名</view>
+						<input class="uni-input" style="flex: 1; height: 60px" name="nickname" placeholder="请输入项目名" />
+					</view>
+					<view class="uni-form-item uni-column"style="margin-bottom: 10px">
+						<view class="title">描述</view>
+						<view class="uni-textarea" style="border: 1px solid #eee">
+							<textarea placeholder-style="" style="height: 100px" placeholder="项目描述"/>
+						</view>
+					</view>
+
+					<view style="text-align: center; flex-direction: row;">
+						<button class="mini-btn" type="default" size="mini">取消</button>
+						<button class="mini-btn" type="primary" size="mini">提交</button>
+					</view>
+				</form>
+			</view>
+		</uni-popup>
+
+		<!--新建任务-->
+		<uni-popup id="dialogInput" ref="dialogCreateJob" type="dialog" @change="change">
+			<view style="width: 100%; background: #fff; padding: 5px 20px; border-radius: 15px;" class="createPop">
+				<view style="text-align: center; margin: 15px 0px; color: #007aff"> 新建任务 </view>
+				<form @submit="submit" style="font-size: 14px">
+					<view class="title" style="display: flex; flex-direction: row;">
+						<span>所属模块： </span><span style="color: #dd524d;padding-left: 10px ">模块1</span>
+					</view>
+					<view class="uni-form-item uni-column" style="margin-bottom: 0px; display: flex; flex-direction: row; ">
+						<view class="title" style="flex: 0 0 60px; padding-top: 20px">任务名:</view>
+						<input class="uni-input" style="flex: 1; height: 60px" name="nickname" placeholder="请输入任务名" />
+					</view>
+					<!--多人协作-->
+					<view class="title" style="display: flex; flex-direction: row;">
+						<span style="padding-top:5px">多人协作： </span>
+						<switch color="#007aff" checked style="transform:scale(0.7)"/>
+						<span style="color:#aaa;padding-left: 10px; padding-top:10px; font-family: 楷体; font-size: 12px">
+							多人任务将共享进度
+						</span>
+					</view>
+					<!--预计时间-->
+					<view class="title" style="display: flex; flex-direction: row;">
+						<span style="padding-top: 5px">完成时间： </span>
+						<span style="padding-top: 5px; padding-left: 10px; color: #007aff">
+							<picker mode="date" :value="newTask.date"   @change="taskDateChange">
+								<view class="uni-input">{{newTask.date}}</view>
+							</picker>
+						</span>
+					</view>
+
+					<view class="uni-form-item uni-column"style="margin: 20px 0px">
+						<view class="title">描述:</view>
+						<view class="uni-textarea" style="border: 1px solid #eee">
+							<textarea placeholder-style="" style="height: 65px; font-size: 14px" placeholder="任务描述"/>
+						</view>
+					</view>
+
+					<view style="text-align: center; flex-direction: row; margin-bottom: 15px">
+						<button class="mini-btn" type="default" size="mini">取消</button>
+						<button class="mini-btn" type="primary" size="mini">提交</button>
+					</view>
+				</form>
+			</view>
+		</uni-popup>
+
+
+	</view>
+</template>
+<script>
+	import Utils from "../../../js/utils";
+
+	export default {
+		components: {
+			
+		},
+		data() {
+			return {
+				newTask: {
+					date: Utils.dateFormat("YYYY-mm-dd"),
+					startDate: Utils.dateFormat("YYYY-mm-dd"),
+					endDate: Utils.dateFormat("YYYY-mm-dd")
+				},
+				showProjects: true,
+				iconPlus: {
+					color: '#4cd964',
+					size: '22',
+					type: 'plus'
+				},
+				list: [{
+						// url: '/static/number/1.png',
+						text: '文旅服务器迁移项目十点四十',
+						badge: '0',
+						type: "primary"
+					},
+					{
+						url: '/static/number/2.png',
+						text: 'Grid 2',
+						badge: '1',
+						type: "success"
+					},
+					{
+						url: '/static/number/3.png',
+						text: 'Grid 3',
+						badge: '99',
+						type: "warning"
+					},
+					{
+						url: '/static/number/4.png',
+						text: 'Grid 4',
+						badge: '2',
+						type: "error"
+					},
+					{
+						url: '/static/number/5.png',
+						text: 'Grid 5'
+					},
+					{
+						url: '/static/number/6.png',
+						text: 'Grid 6'
+					},
+					{
+						url: '/static/number/7.png',
+						text: 'Grid 7'
+					},
+					{
+						url: '/static/number/8.png',
+						text: 'Grid 8'
+					},
+					{
+						url: '/static/number/9.png',
+						text: 'Grid 9'
+					}
+				],
+				rules: {
+					name: {
+						rules: [{
+							required: true,
+							errorMessage: '请输入姓名',
+							trigger: 'blur'
+						}, {
+							minLength: 3,
+							maxLength: 5,
+							errorMessage: '姓名长度在 {minLength} 到 {maxLength} 个字符',
+							trigger: 'blur'
+						}]
+					}
+				},
+				navigateFlag: false
+			}
+		},
+		onLoad() {},
+		onReady() {},
+		onShareAppMessage() {
+			return {
+				title: '欢迎体验uni-app',
+				// path: '/pages/tabBar/template/template'
+			}
+		},
+		onNavigationBarButtonTap(e) {
+			uni.navigateTo({
+				url: '/pages/about/about'
+			});
+		},
+		methods: {
+			input(form, name, value) {
+				this.$refs[form].setValue(name, value)
+			},
+			search () {
+
+			},
+			clickDisplay () {
+				this.showProjects = !this.showProjects
+			},
+			change () {
+
+			},
+			taskDateChange (e) {
+				this.$set(this.newTask, 'date', e.detail.value);
+				// this.newTask.date = e.detail.value;
+				console.log(this.newTask);
+			},
+			dialogInputConfirm () {
+
+			},
+			submit () {
+
+			},
+
+
+			/**
+			 * 打开提交信息
+			 */
+			confirmDialog() {
+				this.$refs.dialogInput.open();
+			},
+			onNavigationBarButtonTap () {
+				this.$refs.dialogCreateJob.open();
+
+			}
+
+
+		}
+	}
+</script>
+
+<style>
+	.title { margin-bottom: 10px }
+
+	.example-body {
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		padding: 0;
+		font-size: 14px;
+		background-color: #ffffff;
+	}
+
+	.example-body {
+		/* #ifndef APP-NVUE */
+		display: block;
+		/* #endif */
+	}
+
+	.grid-dynamic-box {
+		margin-bottom: 15px;
+	}
+
+	.grid-item-box {
+		flex: 1;
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 15px 0;
+	}
+
+	.grid-dot {
+		position: absolute;
+		top: 5px;
+		right: 15px;
+	}
+
+	.swiper {
+		height: 420px;
+	}
+
+
+	.tag-parent {
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: left;
+		padding: 0;
+		font-size: 14px;
+		background-color: #ffffff;
+		
+	}
+	.tag-view {
+		/* #ifndef APP-PLUS-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: column;
+		margin: 10rpx 15rpx;
+		justify-content: left;
+		/* align-content: 'stretch'; */
+	}
+
+</style>
