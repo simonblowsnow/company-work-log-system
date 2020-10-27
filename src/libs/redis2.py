@@ -25,7 +25,6 @@ class MyRedis(object):
     
     def __init__(self):
         pass
-        
     
     @staticmethod
     def sendMessage(msg, channel = None):
@@ -48,13 +47,12 @@ class MyRedis(object):
         value = msg[2]
         return eval(value) if toDict and value!=None else value
         
-        
     @staticmethod
     def SwitchToLocal():
         raise RuntimeError('Redis Error')
-        return
+        if not C.DEV_MODE: return
         MyRedis.redis_status = False
-        L.sys("redisEx find error in Function :" + inspect.stack()[1][3])
+        L.error("RedisEx find error in Function: " + inspect.stack()[1][3])
         
     @staticmethod
     def checkConn():
@@ -62,6 +60,7 @@ class MyRedis(object):
         if not MyRedis.redis_status:
             if (MyRedis.index % 30)!=0: return 
             try:
+                '''当缓存数据量较大时请谨慎操作'''
                 MyRedis.rs.get('*')
                 for key in MyRedis.data: MyRedis.rs.set(key, MyRedis.data[key])
                 for key in MyRedis.dataHash: 

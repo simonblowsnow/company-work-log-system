@@ -123,7 +123,7 @@ class Database(object):
         cursor.execute(sql, tuple(args))
         # print sql, page * size, size
         
-        return res[0][0], cursor
+        return res[0][0], cursor.fetchall()
 
     def selectPageExt(self, sql, params, page, size, cursor=None):
         sqlEx = "select count(*) from (" + sql + ") sc"

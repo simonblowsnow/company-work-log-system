@@ -71,5 +71,19 @@
     },
     "mp-qq" : {
         "usingComponents" : true
-    }
+	},
+	"h5": {
+		"devServer": {
+			// "port": 8080,
+			"disableHostCheck": true,
+			"proxy": {
+				"/api": {
+					"target": "http://localhost:9406/",
+					"changeOrigin": true,
+					"secure": false,
+					"pathRewrite": {"^/api":""}
+				}
+			}
+		}
+	}
 }

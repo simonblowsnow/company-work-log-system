@@ -2,11 +2,13 @@
 
 
 class KEY():
-    Config = "config"
-    IPLimit = "ipLimit"
-    UserInfo = "userInfo"
-    UserKey = "userKey"
-    
+    CONFIG = "config"
+    USERS = "users"
+    IP_LIMIT = "ipLimit"
+    USER_INFO = "userInfo"
+    USER_KEY = "userKey"
+    TOKENS = "tokens"
+    AUTH_CODE = "securityCode"
     
     
     

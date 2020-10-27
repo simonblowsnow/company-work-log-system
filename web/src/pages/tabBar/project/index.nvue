@@ -11,98 +11,86 @@
 			</view>
 		</view>
 
+		<!-- 项目列表 -->
 		<view class="example-body" v-show="showProjects">
 			<!-- 因为swiper特性的关系，请指定swiper的高度 ，swiper的高度并不会被内容撑开-->
 			<swiper class="swiper" :indicator-dots="true">
-				<swiper-item>
+				<!-- 整体页遍历 -->
+				<swiper-item v-for="i in Math.ceil(projects.length / 9)">
 					<uni-grid :column="3" :highlight="true" @change="change">
-						<uni-grid-item v-for="(item, index) in list" :index="index" :key="index">
-							<view class="grid-item-box" style="text-align: center; color: #00f; font-weight: 500">
-								<text class="text">{{ item.text }}</text>
-							</view>
-						</uni-grid-item>
-					</uni-grid>
-				</swiper-item>
-				<swiper-item>
-					<uni-grid :column="3" :highlight="true" @change="change">
-						<uni-grid-item v-for="(item, index) in list" :index="index" :key="index">
-							<view class="grid-item-box">
-								
-								<text class="text">{{ item.text }}</text>
+						<!-- 页内列表遍历 -->
+						<uni-grid-item v-for="j in projects.length >= (i * 9) ? 9 : (projects.length - i * 9 + 9)" :key="j">
+							<view :class="['grid-item-box', projects[i * 9 + j - 10].id == projectSel.id ? 'selProj': '']" 
+								style="text-align: center; font-weight: 500; overflow: hidden" @click="clickProject(projects[i * 9 + j - 10])">
+								<!-- 新建项目 -->
+								<uni-icons v-if="projects[i * 9 + j - 10].id == -1" type="plus" size="25" style="text-align: right;" ></uni-icons>
+								<text v-if="projects[i * 9 + j - 10].id == -1" class="text" style="color: #007aff; font-size: 24rpx">{{ projects[i * 9 + j - 10].name }}</text>
+								<!-- 项目列表 -->
+								<text v-else class="text" style="font-weight: 600; color: #555">{{ projects[i * 9 + j - 10].name }}</text>
+								<text class="text" style="color: #999; font-size: 24rpx; font-family: fangsong; margin-top: 8px">
+									{{ projects[i * 9 + j - 10].id != -1 ? status[projects[i * 9 + j - 10].status] : '' }}
+								</text>
 							</view>
 						</uni-grid-item>
 					</uni-grid>
 				</swiper-item>
 			</swiper>
-
 		</view>
 
-		
+		<!-- 模块列表 -->
 		<uni-collapse>
-			<uni-collapse-item :open="true" title="模块列表 - " thumb="">
-				<view class="tag-parent" style="height: 280rpx; text-align:left; overflow: auto">
+			<uni-collapse-item :open="true"  thumb="/static/module-13.png"
+				:title="'当前项目：' + (projectSel.id < 0 ? '未选择项目' : ('' + projectSel.name + '     -    模块列表'))">
+				<view class="tag-parent" style="min-height: 220rpx; max-height: 500rpx; text-align:left; overflow: auto">
 					<view class="tag-view">
-						<uni-tag :inverted="true" :circle="false" text="新建" type="primary" />
-					</view>
-					<view class="tag-view">
-						<uni-tag :inverted="true" text="标签" type="success" />
-					</view>
-					<view class="tag-view">
-						<uni-tag :inverted="true" text="标签" type="success" />
-					</view>
-					<view class="tag-view">
-						<uni-tag :inverted="true" text="标签" type="warning" />
-					</view>
-					<view class="tag-view">
-						<uni-tag :inverted="true" text="标签" type="error" />
-					</view>
-					<view class="tag-view">
-						<uni-tag :inverted="true" text="标签" type="error" />
-					</view>
-					<view class="tag-view">
-						<uni-tag :inverted="true" text="标签" type="error" />
+						<uni-tag :inverted="true" text="新建模块" @click="showCreateDialog(1)" type="primary" />
 					</view>
 
+					<view class="tag-view" v-for="m in modules">
+						<uni-tag :inverted="moduleSel.id !== m.id" :text="m.name" @click="clickModule(m)"
+							:type="m.id === -1 ? 'primary' : (m.status ? 'success' : 'warning')" 
+							style="overflow: hidden; max-width: 90%; white-space:nowrap;" />
+					</view>
 				</view>
-			
 			</uni-collapse-item>			
 		</uni-collapse>
 
-		
+		<!-- 任务列表 -->
 		<uni-collapse>
-			<uni-collapse-item :open="true" title="任务列表" thumb="https://img-cdn-qiniu.dcloud.net.cn/new-page/uni.png"
-							   style="text-align: left">
+			<uni-collapse-item :open="true" title="任务列表" style="text-align: left" thumb="/static/task-6.png">
 				<uni-list style="padding-left: 20px; padding-bottom: 150px">
-					<uni-list-item :show-extra-icon="true" :extra-icon="iconPlus" title="新建任务" />
-					<uni-list-item title="开启点击反馈" thumb="/static/number/1.png" thumb-size="base" rightText="默认"  @click="onClick" ></uni-list-item>
+					<uni-list-item :show-extra-icon="true" :extra-icon="iconPlus" @click="showCreateTask" :clickable="true" title="新建任务" />
 
+					<uni-list-item v-for="t in tasks" :title="t.name" :showExtraIcon="true" 
+						:extra-icon="(t.status ? iconTaskOK : iconTask)" 
+						:showBadge="true" badgeType="primary" :badgeText="t.progress + '%'" 
+						:rightText="t.userCount + '人参与'"  @click="onClick" ></uni-list-item>
 				</uni-list>				
-				
-			
 			</uni-collapse-item>
 			
 		</uni-collapse>
 
-
+		<!--================================================================= 弹出框 ==========================================================================-->
 		<!--新建项目/模块-->
 		<uni-popup id="dialogInput" ref="dialogCreate" type="dialog" @change="change">
 			<view style="width: 100%; background: #fff; padding: 5px 20px; border-radius: 15px;" class="createPop">
-				<view style="text-align: center; margin: 15px 0px; color: #007aff"> 新建项目 </view>
+				<view style="text-align: center; margin: 15px 0px; color: #007aff"> 新建{{newProject.level ? "模块" : "项目"}} </view>
 				<form @submit="submit" style="font-size: 14px">
 					<view class="uni-form-item uni-column" style="margin-bottom: 5px; display: flex; flex-direction: row; ">
-						<view class="title" style="flex: 0 0 60px; padding-top: 20px">项目名</view>
-						<input class="uni-input" style="flex: 1; height: 60px" name="nickname" placeholder="请输入项目名" />
+						<view class="title" style="flex: 0 0 60px; padding-top: 20px">{{newProject.level ? "模块" : "项目"}}名</view>
+						<input class="uni-input" v-model="newProject.name" style="flex: 1; height: 60px" name="nickname" 
+							placeholder-style="color: #ccc" placeholder="请输入名称" />
 					</view>
 					<view class="uni-form-item uni-column"style="margin-bottom: 10px">
 						<view class="title">描述</view>
 						<view class="uni-textarea" style="border: 1px solid #eee">
-							<textarea placeholder-style="" style="height: 100px" placeholder="项目描述"/>
+							<textarea v-model="newProject.description" placeholder-style="color: #ccc" style="height: 100px" placeholder="描述（必填）"/>
 						</view>
 					</view>
 
 					<view style="text-align: center; flex-direction: row;">
-						<button class="mini-btn" type="default" size="mini">取消</button>
-						<button class="mini-btn" type="primary" size="mini">提交</button>
+						<button class="mini-btn" type="default" size="mini" @click="cancelCreate">取消</button>
+						<button class="mini-btn" type="primary" size="mini" @click="createProject">提交</button>
 					</view>
 				</form>
 			</view>
@@ -114,17 +102,18 @@
 				<view style="text-align: center; margin: 15px 0px; color: #007aff"> 新建任务 </view>
 				<form @submit="submit" style="font-size: 14px">
 					<view class="title" style="display: flex; flex-direction: row;">
-						<span>所属模块： </span><span style="color: #dd524d;padding-left: 10px ">模块1</span>
+						<span>所属模块： </span><span style="color: #f0ad4e; padding-left: 10px ">{{moduleSel.name}}</span>
 					</view>
 					<view class="uni-form-item uni-column" style="margin-bottom: 0px; display: flex; flex-direction: row; ">
 						<view class="title" style="flex: 0 0 60px; padding-top: 20px">任务名:</view>
-						<input class="uni-input" style="flex: 1; height: 60px" name="nickname" placeholder="请输入任务名" />
+						<input class="uni-input" style="flex: 1; height: 60px" name="nickname" v-model="newTask.name"
+							placeholder-style="color: #ddd" placeholder="请输入任务名" />
 					</view>
 					<!--多人协作-->
 					<view class="title" style="display: flex; flex-direction: row;">
 						<span style="padding-top:5px">多人协作： </span>
-						<switch color="#007aff" checked style="transform:scale(0.7)"/>
-						<span style="color:#aaa;padding-left: 10px; padding-top:10px; font-family: 楷体; font-size: 12px">
+						<switch color="#007aff" :checked="newTask.multi" style="transform:scale(0.7)"/>
+						<span style="color:#aaa; padding-left: 10px; padding-top:10px; font-family: 楷体; font-size: 12px">
 							多人任务将共享进度
 						</span>
 					</view>
@@ -141,22 +130,31 @@
 					<view class="uni-form-item uni-column"style="margin: 20px 0px">
 						<view class="title">描述:</view>
 						<view class="uni-textarea" style="border: 1px solid #eee">
-							<textarea placeholder-style="" style="height: 65px; font-size: 14px" placeholder="任务描述"/>
+							<textarea placeholder-style="" placeholder-style="color: #ddd" v-model="newTask.description"
+								style="height: 65px; font-size: 14px" placeholder="任务描述"/>
 						</view>
 					</view>
 
 					<view style="text-align: center; flex-direction: row; margin-bottom: 15px">
-						<button class="mini-btn" type="default" size="mini">取消</button>
-						<button class="mini-btn" type="primary" size="mini">提交</button>
+						<button class="mini-btn" type="default" size="mini" @click="cancelCreateTask">取消</button>
+						<button class="mini-btn" type="primary" size="mini" @click="createTask">提交</button>
 					</view>
 				</form>
 			</view>
 		</uni-popup>
 
-
+		<!-- 消息提醒 -->
+		<uni-popup id="popupMessage" ref="popupMessage" type="dialog" >
+			<uni-popup-message  type="error" title="提示" :message="message" :before-close="false" :duration="2000"></uni-popup-message>
+		</uni-popup>
+		<!-- 对话框 -->
+		<uni-popup id="popupDialog" ref="popupDialog" type="dialog" >
+			<uni-popup-dialog  type="error" title="提示" :value="message" :before-close="false"></uni-popup-dialog>
+		</uni-popup>
 	</view>
 </template>
 <script>
+              import message from "../../../components/uni-popup/message"
 	import Utils from "../../../js/utils";
 
 	export default {
@@ -165,81 +163,59 @@
 		},
 		data() {
 			return {
+				iconPlus: {
+					color: '#4cd964',
+					size: '18',
+					type: 'plus'
+				},
+				iconTask: {
+					color: '#d4237a',
+					size: '18',
+					type: 'circle'	// circle checkbox
+				},
+				iconTaskOK: {
+					color: '#22ac38',
+					size: '18',
+					type: 'checkbox'	// circle checkbox
+				},
+				status: ['进行中', '已暂停', '已完成', '未开始'],
+				message: "请先选择一个项目！",
+				// 新项目/模块通用
+				newProject: {
+					pid: 0,	// 模块有
+					level: 0,
+					name: "",
+					description: ""
+				},
 				newTask: {
+					pid: -1,
+					mid: -1,
+					name: "",
+					description: "",
+					multi: true,
 					date: Utils.dateFormat("YYYY-mm-dd"),
 					startDate: Utils.dateFormat("YYYY-mm-dd"),
 					endDate: Utils.dateFormat("YYYY-mm-dd")
 				},
+				projectSel: { id: -2, name: '未选择项目' },
+				moduleSel: { id: -2, name: '未选择模块' },
 				showProjects: true,
-				iconPlus: {
-					color: '#4cd964',
-					size: '22',
-					type: 'plus'
-				},
-				list: [{
-						// url: '/static/number/1.png',
-						text: '文旅服务器迁移项目十点四十',
-						badge: '0',
-						type: "primary"
-					},
-					{
-						url: '/static/number/2.png',
-						text: 'Grid 2',
-						badge: '1',
-						type: "success"
-					},
-					{
-						url: '/static/number/3.png',
-						text: 'Grid 3',
-						badge: '99',
-						type: "warning"
-					},
-					{
-						url: '/static/number/4.png',
-						text: 'Grid 4',
-						badge: '2',
-						type: "error"
-					},
-					{
-						url: '/static/number/5.png',
-						text: 'Grid 5'
-					},
-					{
-						url: '/static/number/6.png',
-						text: 'Grid 6'
-					},
-					{
-						url: '/static/number/7.png',
-						text: 'Grid 7'
-					},
-					{
-						url: '/static/number/8.png',
-						text: 'Grid 8'
-					},
-					{
-						url: '/static/number/9.png',
-						text: 'Grid 9'
+				
+				projects: [{
+						name: '新建项目',
+						id: -1
 					}
 				],
-				rules: {
-					name: {
-						rules: [{
-							required: true,
-							errorMessage: '请输入姓名',
-							trigger: 'blur'
-						}, {
-							minLength: 3,
-							maxLength: 5,
-							errorMessage: '姓名长度在 {minLength} 到 {maxLength} 个字符',
-							trigger: 'blur'
-						}]
-					}
-				},
+				modules: [],
+				tasks: [],
 				navigateFlag: false
 			}
 		},
 		onLoad() {},
-		onReady() {},
+		onReady() {
+			this.getProjectList();
+
+		},
 		onShareAppMessage() {
 			return {
 				title: '欢迎体验uni-app',
@@ -254,6 +230,95 @@
 		methods: {
 			input(form, name, value) {
 				this.$refs[form].setValue(name, value)
+			},
+			// 请求项目列表
+			getProjectList () {
+				Utils.ajax("/listProject", {}).then( res => {
+					this.projects = [{name: '新建项目', id: -1}].concat(res.data.lines);
+					// 列表加载后直接加载模块列表
+					this.projectSel = this.projects[1];
+					this.getModuleList(this.projectSel.id);
+				});
+			},
+			// 请求模块列表
+			getModuleList (pid) {
+				Utils.ajax("/listModule", {pid: pid}).then( res => {
+					// this.modules = [{name: '新建模块', id: -1, status: 0}].concat(res.data);
+					this.modules = res.data;
+				});
+			},
+			getTaskList (mid) {
+				Utils.ajax("/listTask", {mid: mid}).then( res => {
+					this.tasks = res.data;
+					console.log(this.tasks);
+				});
+			},
+			// 选择项目
+			clickProject (proj) {
+				this.projectSel = proj;
+				if (proj.id === -1) return this.showCreateDialog(0);	
+				this.getModuleList(proj.id);
+				this.moduleSel = {id: -2, name: '未选择模块'};
+				this.tasks = [];
+			},
+			// 准备新建项目/模块
+			showCreateDialog (level) {
+				if (level === 1 && this.projectSel.id < 1) {
+					this.message = "请先选择项目！";
+					return this.$refs.popupMessage.open();
+				}
+				
+				this.newProject = {level: level, name: '', description: '', pid: this.projectSel.id};
+				this.$refs.dialogCreate.open();
+			},
+			// 新建任务
+			showCreateTask () {
+				let m = this.moduleSel;
+				// 前置条件
+				if (m.id < 0) {
+					this.message = "请先选择项目和模块！";
+					return this.$refs.popupMessage.open();
+				}
+				// 重新初始化值
+				let kv = {name: '', description: '', date: Utils.dateFormat("YYYY-mm-dd"), pid: m.projectId, mid: m.id};
+				for (let k in kv) this.newTask[k] = kv[k];
+				this.$refs.dialogCreateJob.open();
+			},
+			// 新建项目 / 模块
+			createProject () {
+				let p = this.newProject;
+				if (p.name === "" || p.description === "") return;
+				Utils.ajax(p.level ? "/createModule" : "/createProject", p).then( res => {
+					if (!p.level) {
+						this.getProjectList();
+					} else
+						this.getModuleList(p.pid);
+					this.$refs.dialogCreate.close();	
+				});
+			},
+			createTask () {
+				let t = this.newTask;
+				if (t.name === "") return;
+				Utils.ajax("/createTask", t).then( res => {
+					this.$refs.dialogCreateJob.close();
+					this.getTaskList(t.mid);
+				});
+			},
+			// 选择模块
+			clickModule (m) {
+				this.moduleSel = m;
+				if (this.projectSel.id < 0) {
+					this.message = "请先选择一个项目！";
+					return this.$refs.popupMessage.open();
+				}
+				// 加载模块对应的任务列表
+				this.getTaskList(m.id);
+			},
+			cancelCreateTask () {
+				this.$refs.dialogCreateJob.close();
+			},
+			cancelCreate () {
+				this.$refs.dialogCreate.close();
 			},
 			search () {
 
@@ -282,9 +347,10 @@
 			 */
 			confirmDialog() {
 				this.$refs.dialogInput.open();
+
 			},
 			onNavigationBarButtonTap () {
-				this.$refs.dialogCreateJob.open();
+				
 
 			}
 
@@ -295,7 +361,9 @@
 
 <style>
 	.title { margin-bottom: 10px }
-
+	.selProj {
+		border: 1px solid #007aff 
+	}
 	.example-body {
 		/* #ifndef APP-NVUE */
 		display: flex;

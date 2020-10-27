@@ -186,11 +186,13 @@ def KV2Dict(keys, values):
 def P2C(p):
     return float(p) * 20 + 1800
 
-def get_md5(st):
-    m1 = hashlib.md5()
-    m1.update(st)
-    return m1.hexdigest()
+def get_md5(txt):
+    m = hashlib.md5()
+    content = txt if type(txt) is bytes else txt.encode('utf8') 
+    m.update(content)
+    return m.hexdigest()
    
     
 if __name__ == '__main__':
     pass
+    

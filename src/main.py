@@ -1,21 +1,15 @@
 #coding: utf8
 
 
-from flask import Flask, request, current_app, g, render_template
+from flask import Flask, request, current_app, g
 from flask_cors import *
-from functools import wraps
-from src.libs.log import L
-from src.libs.utils import TM, RandCode, DiffSecond
-from src.common.key import KEY
-from src.common.cache import RequestCache
-from src.libs.redis2 import MyRedis as rs
+from src.login import auth_required, web_login_common, login_out, get_auth_code
 from src.config import Web as C
-
-from src.common.response import NormalResponseJson, NormalResponse, ErrorResponse, ErrorResponseJson, ErrorResponseData
-
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
-
-import src.login as lg
+from src.libs.log import L
+from src.common.response import NormalResponseJson, ErrorResponseJson, ErrorResponseData
+import src.project as P
+import src.module as M
+import src.task as T
 
 
 app = Flask(__name__)
@@ -24,127 +18,116 @@ app.config['SECRET_KEY'] = 'AreUOK'
 app.config['TOKEN_EXPIRATION'] = 7200
 
 
-def check_ip_limit(ip):
-    ftm = rs.hget(KEY.IPLimit, ip, False)
-    if not ftm: return False
-    '''封禁大约7天'''
-    if DiffSecond(TM(), ftm) < 605000: return True
-    
-    return False
-
-def getClientIP(request):
-    ips = request.headers.get('X-Forwarded-For', '')
-    return ips.split(',')[0].strip()
-
-def get_token(username, level = 0, scope = "1"):
-    expiration = current_app.config['TOKEN_EXPIRATION']
-    s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
-    token = s.dumps({ 'user': username, 'level': level, 'scope': scope })
-    return token.decode('ascii')
-
-def verify_password(token):
-    s = Serializer(current_app.config['SECRET_KEY'])
-    try:
-        data = s.loads(token)
-    except BadSignature:
-        return False, "温馨提示：登录超时，请重新登陆！" # 'token is invalid'
-    except SignatureExpired:
-        return False, 'token is expired'
-    '''End try'''
-     
-    g.user = {'user': data['user'], 'level': data['level'], 'scope': data['scope']}
-    return True, "OK"
-
-def authRequired(level):
-    def wrapper(func):
-        @wraps(func)
-        def inner_wrapper(*args, **kwargs):
-            ip = getClientIP(request)
-            if check_ip_limit(ip): return ErrorResponseJson("温馨提示：操作过于频繁，请稍后再试！")
-            
-            R = request.form if request.method=='POST' else request.args
-            token, lc = R.get('tk', ''), R.get('lc', '')
-            
-            '''未提供token'''
-            if token=='':
-                return ErrorResponseJson("温馨提示：登录超时，请重新登陆！", None, '110') # 116-06
-            flag, message = verify_password(token)
-            '''token无效'''
-            if not flag: 
-                return ErrorResponseJson(message, None, '110')
-            '''二次验证'''
-            info = rs.hget('TKS', lc)
-            
-            if not info or info['tk'] != token:
-                return ErrorResponseJson("登录超期，请重新登陆!", None, '110')
-            
-            '''权限检查'''
-            U = rs.hget('UserInfo', info['user'])
-            if not U or U['level'] < int(level[2:]): return ErrorResponseJson("权限不够或需要重新登陆！")
-            
-            '''此处可以优化，由装饰器控制返回结果'''
-            res = RequestCache(func, info['user'], request, *args, **kwargs)
-
-            return res
-            
-        return inner_wrapper
-    return wrapper    
-
-def webLoginCommon(request, app = None):
-    ip = getClientIP(request)
-    if check_ip_limit(ip): return ErrorResponseJson("温馨提示：操作过于频繁，请稍后再试！")
-    
-    R = request.form if request.method=='POST' else request.args
-    client = str(R.get('mcode', '0'))
-    securityCode, codeTms = str(R.get('securityCode', '')), str(R.get('tms', ''))
-    correctCode = str(rs.hget('securityCode', codeTms, False))
-
-    if not app and (codeTms=='' or securityCode=='' or correctCode!=securityCode):
-        return ErrorResponseJson('验证码有误， 请重新输入！', None, '103-02')
-    
-    username, password = R.get('username', ''), R.get('password', '')
-    
-    data = lg.com_login(username, password, ip, "", app)
-    if data['error']: return ErrorResponseData(data)
-    
-    L.log('User Login:', username, ip)
-    token = get_token(username)
-    uKey = str(abs(hash(token)) + 3456)
-    
-    '''TODO: 定期删除TKS或设置redis过期时间，防止太长'''
-    U = data['data']
-    userInfo = {'name': username, 'level': U['level'], 'point': U['point'], 'type': U['type'], 
-                'allowTransfer': U['allowTransfer'], 'allowWithdraw': U['allowWithdraw'], 'id': U['id'], 
-                'allowEqualCode': U['allowEqualCode'], 'defaultPasswd': U['defaultPasswd']}
-    info = rs.hget('Users', uKey)
-    if info and info['name'] != username: uKey += RandCode(6)
-    '''踢除原登录用户·此处保留一个bug'''
-    srcUKey = rs.hget(KEY.UserKey, username, False)
-    if srcUKey: 
-        rs.hdel('TKS', srcUKey)
-        rs.hdel('Users', srcUKey)
-    rs.hset('TKS', uKey, {'tk': token, 'user': username, 'time': TM()})
-    rs.hset('Users', uKey, userInfo)
-    rs.hset(KEY.UserInfo, username, userInfo)
-    rs.hset(KEY.UserKey, username, uKey)
-    
-    data = {'u': username, 'tk': token, 'lc': uKey, 'lv': U['level'], "ip": ip, "client": client, "loginTime": TM() }
-    print(data)
-    
-    return data
-
-@app.route('/isLogin', methods=['GET', 'POST'])
-@authRequired('lv0')
-def isLogin(user):
-    L.info("Request isLogin", user)
-    return NormalResponseJson(request, {})
-
 @app.route('/')
 def index():
     return "Welcome..."
 
+'''验证码'''
+@app.route('/securityCode')
+def get_code():
+    return get_auth_code(app)   
+
+@app.route('/login', methods=['GET', 'POST'])    
+def webLogin():
+    '''Form field: username, password, securityCode, tms'''
+    '''第二个参数传1则无需验证码'''
+    return web_login_common(request, 1)
+
+@app.route('/isLogin', methods=['GET', 'POST'])
+@auth_required('lv0')
+def is_login(user):
+    L.info("User %s Request login status" % user)
+    return NormalResponseJson({})
+
+@app.route('/loginOut', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def login_out(user):
+    return login_out(user)
+
+'''----------------------------------正式业务开始---------------------------------------'''
+@app.route('/createProject', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _create_project(user, R):
+    name = R.get('name', '')
+    description = R.get('description', '')
+    if name == '' or description == '': return ErrorResponseJson('项目名和描述不能为空！') 
+    data = P.create_project(user, name, description) 
+    
+    if not data: return ErrorResponseJson('操作失败！')
+    
+    return NormalResponseJson({'id': data}) 
+
+@app.route('/listProject', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _list_project(user, R):
+    create_user = R.get('createUser', '')
+    category = R.get('category', '')
+    department = R.get('department', '')
+    page = int(R.get('page', 0))
+    size = int(R.get('page', 26))
+    data = P.get_project_list(create_user, category, department, page, size)
+    
+    return NormalResponseJson(data)
+
+
+@app.route('/createModule', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _create_module(user, R):
+    pid = R.get('pid', '')
+    name = R.get('name', '')
+    description = R.get('description', '')
+    if pid == "" or name == '' or description == '': return ErrorResponseJson('模块名和描述不能为空！') 
+    data = M.create_module(pid, user, name, description)
+    
+    print(data)
+    if not data: return ErrorResponseJson('操作失败，请检查是否填写完整！')
+    
+    return NormalResponseJson({'id': data}) 
+
+@app.route('/listModule', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _list_module(user, R):
+    pid = R.get('pid', '')
+    create_user = R.get('createUser', '')
+    category = R.get('category', '')
+    department = R.get('department', '')
+    
+    data = M.get_module_list(pid, create_user, category, department)
+    
+    return NormalResponseJson(data)
+
+
+@app.route('/createTask', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _create_task(user, R):
+    pid = R.get('pid', '')
+    mid = R.get('mid', '')
+    name = R.get('name', '')
+    multi = {'true': 1, 'false': 0}[R.get('multi')]
+    plan_time = R.get('date')
+    description = R.get('description', '')
+    if mid == "" or name == '' or plan_time == '': return ErrorResponseJson('模块名和描述不能为空！')
+    
+    data = T.create_task(pid, mid, user, name, multi, plan_time, description)
+    if not data: return ErrorResponseJson('操作失败，请检查是否填写完整！')
+    
+    return NormalResponseJson({'id': data}) 
+
+@app.route('/listTask', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _list_task(user, R):
+    pid = R.get('mid', '')
+    category = R.get('category', '')
+    department = R.get('department', '')
+    
+    data = T.get_task_list(pid, "", category, department)
+    
+    return NormalResponseJson(data)
+
+
+
 if __name__ == '__main__':
-    L.info('server start on: {} !'.format(C.PORT))
+    L.info('server start on: %s !' % (C.PORT))
     app.debug=False
     app.run(host='0.0.0.0', port=C.PORT)
 

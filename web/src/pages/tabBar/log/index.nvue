@@ -75,6 +75,8 @@
 	import uniList from "@/components/uni-list/uni-list.vue"
 	import uniIcons from "@/components/uni-icons/uni-icons.vue"
 
+	import Utils from "../../../js/utils";
+
 	export default {
 		components: {
 			uniBadge,
@@ -146,8 +148,13 @@
 				navigateFlag: false
 			}
 		},
-		onLoad() {},
-		onReady() {},
+		onLoad() {
+			console.log(12);
+		},
+		onReady() {
+			this.test();
+			console.log(34);
+		},
 		onShareAppMessage() {
 			return {
 				title: '欢迎体验uni-app',
@@ -197,8 +204,23 @@
 			},
 			clickRemove () {
 
-			}
+			},
+			
+			test () {
+				// Utils.ajax("/isLogin", {}).then( res => {
+				// 	debugger
+				// });
 
+				Utils.ajax("/login", {
+					username: 'admin',
+					password: 'admin'
+				}).then(res => {
+					Utils.setCache('token', res.tk);					
+					Utils.getCache('token').then(d => {
+						// console.log(d);
+					});
+				});
+			}
 
 
 

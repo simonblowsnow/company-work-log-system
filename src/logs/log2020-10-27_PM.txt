@@ -1,0 +1,17 @@
+2020-10-27 12:08:54,254 - main.py[line:101] - INFO: server start on: 9406 !
+2020-10-27 15:03:29,414 - main.py[line:130] - INFO: server start on: 9406 !
+2020-10-27 15:03:44,106 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2020-10-27 15:03:46,167 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2020-10-27 15:03:49,156 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2020-10-27 15:03:49,694 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2020-10-27 16:18:18,187 - main.py[line:130] - INFO: server start on: 9406 !
+2020-10-27 16:25:56,623 - main.py[line:130] - INFO: server start on: 9406 !
+2020-10-27 17:06:41,004 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2020-10-27 17:06:41,549 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2020-10-27 17:06:44,581 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2020-10-27 17:06:45,129 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2020-10-27 17:15:08,098 - main.py[line:131] - INFO: server start on: 9406 !
+2020-10-27 17:19:50,188 - main.py[line:132] - INFO: server start on: 9406 !
+2020-10-27 17:21:06,686 - main.py[line:130] - INFO: server start on: 9406 !
+2020-10-27 17:22:35,945 - main.py[line:130] - INFO: server start on: 9406 !
+2020-10-27 17:25:08,393 - main.py[line:130] - INFO: server start on: 9406 !
