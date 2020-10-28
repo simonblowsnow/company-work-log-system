@@ -28,14 +28,12 @@
 							</view>
 
 							<!-- 项目选择 -->
-							<uni-combox class="formLine" label="项目" labelWidth="70px" :candidates="Object.keys(projects)"
+							<uni-combox class="formLine" label="项目" labelWidth="70px" :candidates="projectNames" @input="inputChange(job, 0)"
 										v-model="job.project" placeholder="请选择项目"/>
-							<uni-combox class="formLine" label="模块" labelWidth="70px"
-										:candidates="Object.keys(modules[job.project] || [])"
+							<uni-combox class="formLine" label="模块" labelWidth="70px" :candidates="moduleNames[job.pid] || []" @input="inputChange(job, 1)" 
 										v-model="job.module" placeholder="请选择模块"/>
-							<uni-combox class="formLine" label="任务" labelWidth="70px"
-										:candidates="Object.keys(modules[job.project] || [])"
-										v-model="job.module" placeholder="请选择模块"/>
+							<uni-combox class="formLine" label="任务" labelWidth="70px" :candidates="taskNames[job.pid + '_' + job.mid] || []" @input="inputChange(job, 2)"
+										v-model="job.task" placeholder="请选择模块"/>
 
 							<view style="display: flex; flex-direction: row; margin-top: 6px; ">
 								<view style="height: 35px; flex: 0 0 100px; padding-left: 24px; font-size: 30rpx; color: #999;">进度</view>
@@ -124,27 +122,20 @@
 					'type': 'project',
 					'project': "",	// 级别1
 					'module': "",	// 级别2
+					'task': "",	// 级别3
+					'pid': -1,
+					'mid': -1,
+					'tid': -1,
 					'preProgress': 60,
 					'progress': 60
 				}],
-				projects: {
-					'项目1': {
-						key: '001'
-					},
-					'项目2': {
-						key: '002'
-					}
-				},
-				modules: {
-					'项目1': {
-						'任务1': {
-							progress: 0.5
-						}, 
-						'任务2': {
-							progress: 0.8
-						}
-					}
-				},
+				projects: [],
+				modules: [],
+				tasks: [],
+				projectNames: [],
+				moduleNames: {},
+				taskNames: {},
+
 				navigateFlag: false
 			}
 		},
@@ -153,7 +144,7 @@
 		},
 		onReady() {
 			this.test();
-			console.log(34);
+			this.getProjectList();
 		},
 		onShareAppMessage() {
 			return {
@@ -166,7 +157,60 @@
 				url: '/pages/about/about'
 			});
 		},
+		computed: {
+			// taskNames () {
+			// 	return this.tasks.map(d => d.name);
+			// }
+		},
 		methods: {
+			// 请求项目列表
+			getProjectList (category) {
+				Utils.ajax("/listProject", {category: category}).then( res => {
+					// 为了防止字典破坏原有项目顺序
+					this.projectNames = res.data.lines.map(d => d.name);
+					this.projects = res.data.lines.reduce((a, b) => { a[b.name] = b; return a; }, {});
+				});
+			},
+			// 请求模块列表
+			getModuleList (pid) {
+				Utils.ajax("/listModule", {pid: pid}).then( res => {
+					let modules = res.data.reduce((a, b) => { a[b.name] = b; return a; }, {});
+					this.$set(this.moduleNames, pid, res.data.map(d => d.name));
+					this.$set(this.modules, pid, modules);
+				});
+			},
+			// 请求任务列表
+			getTaskList (pid, mid) {
+				Utils.ajax("/listTask", {mid: mid}).then( res => {
+					let k = pid + "_" + mid;
+					let tasks = res.data.reduce((a, b) => { a[b.name] = b; return a; }, {});
+					this.$set(this.taskNames, k, res.data.map(d => d.name));
+					this.$set(this.tasks, k, tasks);
+				});
+			},
+			// 用户输入项目、模块、任务
+			inputChange (job, level) {
+				if (level === 0) {
+					[job.pid, job.mid, job.tid] = [-1, -1, -1];
+					[job.module, job.task] = ["", ""];
+					if (job.project in this.projects) {
+						job.pid = this.projects[job.project].id;
+						this.getModuleList(job.pid);
+					}
+				} else if (level === 1) {
+					[job.mid, job.tid, job.task] = [-1, -1, ""];
+					if (this.modules[job.pid] && (job.module in this.modules[job.pid])) {
+						job.mid = this.modules[job.pid][job.module].id;
+						this.getTaskList(job.pid, job.mid);
+					}
+				} else if (level === 2) {
+					job.tid = -1;
+					let k = job.pid + "_" + job.mid;
+					if (this.tasks[k] && (job.task in this.tasks[k])) {
+						job.mid = this.tasks[k][job.task].id;
+					}
+				}
+			},
 			jobTypeChange (evt, job) {
 				for (let i = 0; i < this.jobTypes.length; i++) {
 					console.log(i);	
