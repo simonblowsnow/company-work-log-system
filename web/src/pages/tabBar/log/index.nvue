@@ -35,10 +35,13 @@
 							<uni-combox class="formLine" label="任务" labelWidth="70px" :candidates="taskNames[job.pid + '_' + job.mid] || []" @input="inputChange(job, 2)"
 										v-model="job.task" placeholder="请选择模块"/>
 
-							<view style="display: flex; flex-direction: row; margin-top: 6px; ">
-								<view style="height: 35px; flex: 0 0 100px; padding-left: 24px; font-size: 30rpx; color: #999;">进度</view>
-								<view style="height: 35px; flex: 1">
-									<slider v-model="job.progress" @change="progressChange($event, job, idx)" block-size=20 min="0" max="100" show-value />
+							<view style="display: flex; flex-direction: row; margin-top: 6px; overflow: hidden ">
+								<view style="height: 35px; flex: 0 0 33.3%; padding-left: 24px; font-size: 30rpx; color: #999;">进度</view>
+								<view style="height: 35px; flex: 0 0 33.3%; font-size: 12px; overflow: hidden; color: rgb(0, 122, 255); line-height: 35px">
+									<span v-show="job.lastProgress !== -1">今日已设置</span>
+								</view>
+								<view style="height: 35px; flex: 0 0 33.3%">
+									<uni-number-box :min="job.preProgress" :max="100" :disabled="job.preProgress == -1" :value="job.progress" />
 								</view>
 							</view>
 
@@ -46,7 +49,7 @@
 							<view class="uni-title" style="font-size: 30rpx; color: #999; text-align: left; padding: 2px 24px;font-family: fangsong;">备注</view>
 							<view class="uni-textarea" style="margin: 10px 10px 10px 25px">
 								<textarea style="background: #fff; width: 100%; height: 75px;font-size: 30rpx"
-										  placeholder-style="color:#ccc" placeholder="若任务较详细，此项非必填"/>
+										  placeholder-style="color:#ccc" placeholder="详细工作内容"/>
 							</view>
 
 						</view>
@@ -127,7 +130,8 @@
 					'mid': -1,
 					'tid': -1,
 					'preProgress': 60,
-					'progress': 60
+					'progress': 60,
+					'lastProgress': -1	// 已设置
 				}],
 				projects: [],
 				modules: [],

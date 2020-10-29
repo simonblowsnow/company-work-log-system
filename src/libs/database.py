@@ -212,7 +212,9 @@ class Database(object):
             for line in lines:
                 cursor.execute(line[0], line[1])
                 lsRst.append(cursor.lastrowid )
+            cursor.execute("COMMIT;")
             cnx.commit()
+            
         except Exception as e:
             cnx.rollback()
             flag = False                
