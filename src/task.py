@@ -19,7 +19,7 @@ def create_task(project_id, module_id, create_user, name, is_multi, plan_end_tim
 def is_today(tm):
     return tm.strftime('%Y-%m-%d') == datetime.now().strftime('%Y-%m-%d')
     
-def get_task_record(t_id, multi, user, db=None):
+def get_task_control(t_id, multi, user, db=None):
     if not db: db = Database()
     ''' 进度说明：
             一、非协作任务：
@@ -47,21 +47,23 @@ def get_task_record(t_id, multi, user, db=None):
         if not max_time_r or max_time_r < create_time: 
             max_time_r, progress_r, time_r = create_time, progress, create_time 
         
-    for (user, tm, progress, _) in db.selectEx(sqlR, (t_id, t_id)):
+    for (user, tm, progress, _) in db.selectEx(sqlP, (t_id, t_id)):
         plans[user] = {'time': tm, 'progress': progress}
         if not max_time_p or max_time_p < tm: max_time_p, progress_p = tm, progress
         
     info = {'min': 0, 'progress': None}
     if not multi:
+        '''个人未提交过记录'''
         if user not in records:
             info['min'] = plans[user]['progress'] if user in plans else 0   
         else:
+            '''有最新计划变更记录'''
             if user in plans and plans[user]['time'] > records[user]['time']: 
                 info['min'] = plans[user]['progress']
             else:
                 info['min'] = records[user]['progress']
     else:
-        '''无人提交过记录'''
+        '''团队无人提交过记录'''
         if not max_time_r:
             info['min'] = progress_p if progress_p else 0  
         else:
@@ -72,17 +74,14 @@ def get_task_record(t_id, multi, user, db=None):
                 info['min'] = progress_r
                 if is_today(time_r): info['progress'] = progress_r
     '''End If'''  
-                
-                
-#     lines2 = db.selectEx(sqlP, (t_id, t_id))
-#     print(lines1)
-#     print(lines2)
+    
+    return info
     
     
 def get_task_list(mid, create_user, category, department):
     db = Database()
     keys = ['id', 'name', 'moduleId', 'createUser', 'status', 'executor', 'createTime', 'description',
-            'category', 'department', 'mark', 'progress', 'planEndTime']
+            'category', 'department', 'mark', 'progress', 'planEndTime', 'multiUser']
     sql, params = "select " + ','.join(keys) + ", IFNULL(uc, 0) userCount from task t left join \
         (select taskId, count(*) uc from \
             (select taskId, user from record_day where moduleId=%s group by taskId, user) a group by taskId \

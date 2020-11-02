@@ -1,0 +1,385 @@
+<template>
+	<view style="padding: 2px 0px; background-color: #F5F5F5" >	
+		<uni-section title="工作内容" type="line">
+			<view class="uni-right" style="margin-right: 10px">
+				<uni-icons type="loop" size="20"></uni-icons>
+			</view>
+			<view class="uni-right" @click="addJob">
+				<uni-icons type="plus" size="20"></uni-icons>
+			</view>
+		</uni-section>
+
+		<uni-collapse ref="add" class="warp" v-for="(job, idx) in jobs" :key="job.key" style="background-color: #F5F5F5!important">
+			<!--滑动删除组件-->
+			<uni-swipe-action>
+				<uni-swipe-action-item :right-options="options" @click="clickRemove($event, idx)">
+					<!--可折叠组件-->
+					<uni-collapse-item :open="job.open" :show-animation="job.animation" :title="'第' + nums[idx] + '项'" 
+							:thumb="'/static/num_h/' + (idx < 11 ? idx + 1 : 'nm') + '.png'" style="color: #000!important; ">
+						<view class="" style="padding: 2px 0px">
+							<!-- 类型选择 -->
+							<view class="uni-title formLine" style="font-size: 30rpx; padding-left: 24px; color: #888; text-align: left">类型</view>
+							<view style="font-size: 27rpx; margin-bottom: 15px; text-align: center; font-family: fangsong;">
+								<radio-group @change="jobTypeChange($event, job)">
+									<label class="radio" v-for="(item, index) in jobTypes" :key="item.value" style="margin-right: 3px">
+										<radio :value="item.value" :checked="item.value === job.type" />
+										{{item.name}}
+									</label>
+								</radio-group>
+							</view>
+
+							<!-- 项目选择 -->
+							<uni-combox class="formLine" label="项目" labelWidth="70px" :candidates="projectNames" @input="inputChange(job, 0)"
+										v-model="job.project" placeholder="请选择项目"/>
+							<uni-combox class="formLine" label="模块" labelWidth="70px" :candidates="moduleNames[job.pid] || []" @input="inputChange(job, 1)" 
+										v-model="job.module" placeholder="请选择模块"/>
+							<uni-combox class="formLine" label="任务" labelWidth="70px" :candidates="taskNames[job.pid + '_' + job.mid] || []" @input="inputChange(job, 2)"
+										v-model="job.task" placeholder="请选择模块"/>
+
+							<view style="display: flex; flex-direction: row; margin-top: 6px; overflow: hidden ">
+								<view style="height: 35px; flex: 0 0 33.3%; padding-left: 24px; font-size: 30rpx; color: #999;">进度</view>
+								<view style="height: 35px; flex: 0 0 33.3%; font-size: 12px; overflow: hidden; color: rgb(0, 122, 255); line-height: 35px">
+									<span v-show="job.lock">今日已设置</span>
+								</view>
+								<view style="height: 35px; flex: 0 0 33.3%">
+									<uni-number-box :min="job.preProgress" :max="100" :disabled="job.lock" v-model="job.progress" @change="progressChange($event, job)" />
+								</view>
+							</view>
+
+							<!-- 备注 -->
+							<view class="uni-title" style="font-size: 30rpx; color: #999; text-align: left; padding: 2px 24px;font-family: fangsong;">内容</view>
+							<view class="uni-textarea" style="margin: 10px 10px 10px 25px">
+								<textarea style="background: #fff; width: 100%; height: 75px;font-size: 30rpx" :value="job.content"
+										  placeholder-style="color:#ccc" placeholder="详细工作内容"/>
+							</view>
+						</view>
+					</uni-collapse-item>
+				</uni-swipe-action-item>
+			</uni-swipe-action>
+		</uni-collapse>
+		
+
+		<uni-section title="工作计划" type="line">
+
+			<view class="uni-right">
+				<uni-icons type="plus" size="20"></uni-icons>
+			</view>
+		</uni-section>
+
+
+
+	</view>
+</template>
+<script>
+	// import uLink from '@/components/uLink.vue'
+	import uniBadge from "@/components/uni-badge/uni-badge.vue"
+	import uniList from "@/components/uni-list/uni-list.vue"
+	import uniIcons from "@/components/uni-icons/uni-icons.vue"
+
+	import Utils from "../../../js/utils";
+
+	export default {
+		components: {
+			uniBadge,
+			uniList,
+			uniIcons
+			// uLink
+		},
+		data() {
+			return {
+				nums: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六',
+					'十七', '十八', '十九', '二十', '二十一', '二十二', '二十三', '二十四', '二十五', '二十六', '二十七', '二十八', '二十九', '三十'
+				],
+				options: [{
+						text: '取消',
+						style: {
+							backgroundColor: '#007aff'
+						}
+					}, {
+						text: '删除',
+						style: {
+							backgroundColor: '#dd524d'
+						}
+					}
+				],
+				ts: 2, 
+				jobTypes: [{
+						name: '项目',
+						value: 'project'
+					}, {
+						name: '临时',
+						value: 'temp'
+					}, {
+						name: '会议',
+						value: 'meeting'
+					}, {
+						name: '外出',
+						value: 'out'
+					}, {
+						name: '其它',
+						value: 'other'
+					}
+				],
+				jobs: [],
+				projects: [],
+				modules: [],
+				tasks: [],
+				projectNames: [],
+				moduleNames: {},
+				taskNames: {},
+
+				navigateFlag: false
+			}
+		},
+		onLoad() {
+			this.addJob();
+			console.log(12);
+		},
+		onReady() {
+			this.test();
+			this.getProjectList();
+		},
+		onShareAppMessage() {
+			return {
+				title: '欢迎体验uni-app',
+				// path: '/pages/tabBar/template/template'
+			}
+		},
+		onNavigationBarButtonTap(e) {
+			// 提交
+			this.checkJobs();
+			
+		},
+		computed: {
+			// taskNames () {
+			// 	return this.tasks.map(d => d.name);
+			// }
+		},
+		methods: {
+			// 请求项目列表
+			getProjectList (category) {
+				Utils.ajax("/listProject", {category: category}).then( res => {
+					// 为了防止字典破坏原有项目顺序
+					this.projectNames = res.data.lines.map(d => d.name);
+					this.projects = res.data.lines.reduce((a, b) => { a[b.name] = b; return a; }, {});
+				});
+			},
+			// 请求模块列表
+			getModuleList (pid) {
+				Utils.ajax("/listModule", {pid: pid}).then( res => {
+					let modules = res.data.reduce((a, b) => { a[b.name] = b; return a; }, {});
+					this.$set(this.moduleNames, pid, res.data.map(d => d.name));
+					this.$set(this.modules, pid, modules);
+				});
+			},
+			// 请求任务列表
+			getTaskList (pid, mid) {
+				Utils.ajax("/listTask", {mid: mid}).then( res => {
+					let k = pid + "_" + mid;
+					let tasks = res.data.reduce((a, b) => { a[b.name] = b; return a; }, {});
+					this.$set(this.taskNames, k, res.data.map(d => d.name));
+					this.$set(this.tasks, k, tasks);
+				});
+			},
+			getTaskStatus (job, task) {
+				Utils.ajax("/getTaskControl", {tid: task.id, multi: task.multiUser}).then( res => {
+					task.control = res.data;
+					let lock = res.data.progress !== null;
+					this.$set(job, 'lock', lock);
+					this.$set(job, 'preProgress', res.data.min);
+					this.$set(job, 'progress', res.data.min);
+					if (lock) this.$set(job, 'lock', lock);
+				});
+			},
+			// 用户输入项目、模块、任务
+			inputChange (job, level) {
+				if (level === 0) {
+					[job.pid, job.mid, job.tid] = [-1, -1, -1];
+					[job.module, job.task] = ["", ""];
+					if (job.project in this.projects) {
+						job.pid = this.projects[job.project].id;
+						this.getModuleList(job.pid);
+					}
+				} else if (level === 1) {
+					[job.mid, job.tid, job.task] = [-1, -1, ""];
+					if (this.modules[job.pid] && (job.module in this.modules[job.pid])) {
+						job.mid = this.modules[job.pid][job.module].id;
+						this.getTaskList(job.pid, job.mid);
+					}
+				} else if (level === 2) {
+					job.tid = -1;
+					let k = job.pid + "_" + job.mid;
+					if (this.tasks[k] && (job.task in this.tasks[k])) {
+						job.tid = this.tasks[k][job.task].id;
+						let task = this.tasks[k][job.task];
+						this.getTaskStatus(job, task);
+					}
+				}
+			},
+			jobTypeChange (evt, job) {
+				for (let i = 0; i < this.jobTypes.length; i++) {
+					console.log(i);	
+					if (this.jobTypes[i].value === evt.target.value) {
+						job.type = evt.target.value;
+						break;
+					}
+				}
+				console.log(job);
+			},
+			progressChange (e, job) {
+				// 该文本框控件并不会真的双向绑定
+				let value = job.progress = parseInt(e);
+				if (value < job.preProgress) {
+					// this.$set(job, 'progress', job.preProgress);
+					// this.$forceUpdate();
+					uni.showToast({
+						title: "当前进度不能小于历史值！ \n若有变更，请至项目管理中修改计划",
+						icon: 'none',
+						style: {
+							fontSize: "12px"
+						}
+					});
+				}
+			},
+			addJob () {
+				let job = {
+					'key': new Date().getTime(),
+					'open': true,
+					'animation': true,
+					'type': 'project',
+					'project': "",	// 级别1
+					'module': "",	// 级别2
+					'task': "",	// 级别3
+					'pid': -1,
+					'mid': -1,
+					'tid': -1,
+					'content': '',
+					'preProgress': 0,
+					'progress': 0,
+					'lastProgress': -1	// 已设置
+				};
+				this.jobs.push(job);
+			},
+			// 滑动删除按钮检测
+			clickRemove (e, idx) {
+				if (e.index === 1) {
+					uni.showModal({
+						title: '该操作无法撤销',
+						content: '是否删除',
+						success: res => {
+							if (res.confirm) {
+								this.jobs.splice(idx, 1);
+								// this.$delete(this.jobs, idx);			
+							}
+						}
+					});
+				}
+			},
+			checkJobs () {
+				let [error, warn] = ['', ''];
+				debugger
+				for (let i = 0; i < this.jobs.length; i++) {
+					let e = this.jobs[i];
+					if (e.pid === -1 || e.mid === -1 || e.tid === -1) {
+						error = '第' + this.nums[i] + '项的信息不完整，请检查！';
+						break;
+					}
+					if (e.lock && e.content === '') {
+						error = '第' + this.nums[i] + '项为协作任务，必须填写详细工作内容！';
+						break;
+					}
+					if (e.progress === e.preProgress) {
+						warn = '第' + this.nums[i] + '项的今日进度为 0，是否提交?';
+					}
+				}
+
+				if (error !== '') {
+					uni.showModal({
+						title: 'Error', content: error, showCancel: false
+					});
+					return;
+				}
+				if (warn !== '') {
+					uni.showModal({
+						title: 'Warning',
+						content: warn,
+						success: res => {
+							if (res.confirm) {
+								;
+							}
+						}
+					});
+				}
+			},
+			test () {
+				// Utils.ajax("/isLogin", {}).then( res => {
+				// 	debugger
+				// });
+
+				Utils.ajax("/login", {
+					username: 'admin',
+					password: 'admin'
+				}).then(res => {
+					Utils.setCache('token', res.tk);					
+					Utils.getCache('token').then(d => {
+						// console.log(d);
+					});
+				});
+			}
+
+
+
+		}
+	}
+</script>
+
+<style>
+	
+	
+
+	.flex-item {
+		width: 33.3%;
+		height: 200rpx;
+		text-align: center;
+		line-height: 200rpx;
+		float: left;
+	}
+
+	.flex-item-V {
+		width: 100%;
+		height: 150rpx;
+		float: left;
+		text-align: center;
+		line-height: 150rpx;
+	}
+
+	.text {
+		margin: 15rpx 10rpx;
+		padding: 0 20rpx;
+		background-color: #ebebeb;
+		height: 70rpx;
+		line-height: 70rpx;
+		text-align: center;
+		color: #777;
+		font-size: 26rpx;
+	}
+	
+	@import '../../../common/uni-nvue.css';
+	
+	.formLine { 
+		font-family: 'emoji';
+		padding: 2px 10px; text-align: center
+	}
+	
+	.example-body {
+		/* #ifndef APP-NVUE */
+		display: flex;
+		/* #endif */
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		padding: 0;
+		font-size: 26rpx;
+		background-color: #ffffff;
+	}
+</style>

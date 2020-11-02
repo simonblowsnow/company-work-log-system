@@ -124,6 +124,16 @@ def _list_task(user, R):
     
     return NormalResponseJson(data)
 
+@app.route('/getTaskControl', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def _get_task_control(user, R):
+    tid = R.get('tid', '')
+    multi = int(R.get('multi'))
+    
+    data = T.get_task_control(tid, multi, user)
+    
+    return NormalResponseJson(data)
+
 
 
 if __name__ == '__main__':
