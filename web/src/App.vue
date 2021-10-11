@@ -20,6 +20,19 @@
 	.uni-popup__wrapper-box {
 		width: 85%!important; 
 	}
+	.uni-combox__input .uni-input-input { 
+		font-size: 28rpx!important; 
+		color: #666;
+	}
+	.progress .uni-slider {
+		margin-left: 12px!important;
+	}
+	.progress .uni-slider-thumb {
+		width: 20px!important;
+		height: 20px!important;
+		margin-top: -10px!important;
+		margin-left: -10px!important;
+	}
 
     /*.uni-field-inner {*/
     /*    -webkit-box-align: start!important;*/

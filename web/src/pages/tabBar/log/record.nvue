@@ -32,17 +32,37 @@
                                         v-model="job.task" :placeholder="'请选择' + Types[job.type].options[2]" />
 
                             <view style="display: flex; flex-direction: row; margin-top: 6px; overflow: hidden ">
-                                <view style="height: 35px; flex: 0 0 33.3%; padding-left: 24px; font-size: 30rpx; color: #999;">进度</view>
-                                <view style="height: 35px; flex: 0 0 33.3%; font-size: 12px; overflow: hidden; color: rgb(0, 122, 255); line-height: 35px">
-                                    <span v-show="job.lock">今日已设置</span>
-                                </view>
-                                <view style="height: 35px; flex: 0 0 33.3%">
-                                    <uni-number-box :min="job.preProgress" :max="100" :disabled="job.lock" v-model="job.progress" @change="progressChange($event, job)" />
-                                </view>
+                                <view style="height: 40px; width: 20%; padding: 8px 0px 0px 24px; font-size: 30rpx; color: #999;">进度</view>
+                                <!-- <view style="height: 40px; flex: 0 0 20%; padding-top: 5px; font-size: 20rpx; overflow: hidden; color: rgb(0, 122, 255); line-height: 35px">
+                                    <span v-show="job.lock || 1">今日已设置</span>
+                                </view> -->
+                                <!-- <view style="height: 40px; flex: 0 0 33%; padding-top: 4px;">
+                                    <uni-number-box :min="job.preProgress" :max="100" :disabled="job.lock" v-model="job.progress" 
+										@change="progressChange($event, job)" />
+                                </view> -->
+								
+								<button style="width: 22px; height: 22px; line-height: 22px; padding: 0px; margin:8px 2px 5px 0px" @click="change">-</button>	
+								<view style="flex: 1" class="progress">
+									<label ><slider :value="job.progress" @change="progressChange($event, job)" min="0" max="100" show-value /></label>
+								</view>
+								<button style="width: 22px; height: 22px; line-height: 22px; padding: 0px 2px; margin:8px 2px 5px 0px" @click="change">+</button>	
+								
+								<view style="height: 40px; width: 35px; margin-left: 8px; padding-top: 0px;">
+									<checkbox-group name="checkbox">
+										<label  style="float: right;">
+											<text style="font-size: 14px"> </text>
+											<checkbox value="checkbox1" style="padding: 4px 8px 0px 5px" disabled="false" checked="true" />
+										</label>
+									</checkbox-group>
+								</view>
+
+
+
+
                             </view>
 
                             <!-- 备注 -->
-                            <view class="uni-title" style="font-size: 30rpx; color: #999; text-align: left; padding: 2px 24px;">内容</view>
+                            <view class="uni-title" style="font-size: 30rpx; color: #999; text-align: left; padding: 6px 24px;">内容</view>
                             <view class="uni-textarea" style="margin: 10px 10px 10px 25px">
                                 <textarea style="background: #fff; width: 100%; height: 75px;font-size: 30rpx" :value="job.content"
                                             placeholder-style="color:#ccc" :placeholder="category==0 ? '详细工作内容' : '详细计划内容'"/>
@@ -54,49 +74,18 @@
         </uni-collapse>
 	</view>
 </template>
+
+
 <script>
 	// import uLink from '@/components/uLink.vue'
 	import uniBadge from "@/components/uni-badge/uni-badge.vue"
 	import uniList from "@/components/uni-list/uni-list.vue"
 	import uniIcons from "@/components/uni-icons/uni-icons.vue"
 
-	import Utils from "../../../js/utils";
-    function Options (params) {
-        let Fields = [0, 0, 0, 0, 0, 0];
-        params.forEach(e => {
-            Fields[e[1]] = e[0];
-        });
-        return Fields
-    }
-    let Types = [{
-                code: 0,
-                name: '项目',
-                options: Options([['项目', 0], ['模块', 1], ['任务', 2]]),
-                value: 'project'
-            }, {
-                code: 1,
-                name: '事务',
-                options: Options([['事务', 0], ['子项', 1], ['任务', 2]]),
-                value: 'business'
-            }, {
-                code: 2,
-                name: '临时',
-                options: Options([['任务', 2]]),
-                value: 'temp'
-            }, {
-                code: 3,
-                name: '外出',
-                options: Options([['地点', 1], ['事项', 2]]),
-                value: 'out'
-            }, {
-                code: 4,
-                name: '其它',
-                options: Options([['事项', 0], ['子项', 1], ['任务', 2]]),
-                value: 'other'
-            }
-        ];
+	import Utils from "@/js/utils";
+	// import {Project, Module, Task, dataT} from "@/js/common"
+	import {Numbers, Types} from "@/js/base";	
 
-    console.log(Types);
 
 	export default {
         name: 'Record',
@@ -108,9 +97,7 @@
 		},
 		data() {
 			return {
-				nums: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六',
-					'十七', '十八', '十九', '二十', '二十一', '二十二', '二十三', '二十四', '二十五', '二十六', '二十七', '二十八', '二十九', '三十'
-                ],
+				nums: Numbers,
                 Types: Types,
 				options: [{
 						text: '取消',
@@ -223,10 +210,12 @@
 </script>
 
 <style>
+	
     .uni-combox__input, .uni-input-placeholder { 
         color: #bbb!important;
         font-size: 15px;
     }
+
 	.flex-item {
 		width: 33.3%;
 		height: 200rpx;
@@ -272,4 +261,5 @@
 		font-size: 26rpx;
 		background-color: #ffffff;
 	}
+
 </style>
