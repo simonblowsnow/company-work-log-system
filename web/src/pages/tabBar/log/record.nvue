@@ -36,36 +36,28 @@
                                 <!-- <view style="height: 40px; flex: 0 0 20%; padding-top: 5px; font-size: 20rpx; overflow: hidden; color: rgb(0, 122, 255); line-height: 35px">
                                     <span v-show="job.lock || 1">今日已设置</span>
                                 </view> -->
-                                <!-- <view style="height: 40px; flex: 0 0 33%; padding-top: 4px;">
-                                    <uni-number-box :min="job.preProgress" :max="100" :disabled="job.lock" v-model="job.progress" 
-										@change="progressChange($event, job)" />
-                                </view> -->
-								
-								<button style="width: 22px; height: 22px; line-height: 22px; padding: 0px; margin:8px 2px 5px 0px" @click="change">-</button>	
+
+								<button style="width: 22px; height: 22px; line-height: 22px; padding: 0px; margin:8px 2px 5px 0px" @click="clickAM(job, -1)">-</button>	
 								<view style="flex: 1" class="progress">
 									<label ><slider :value="job.progress" @change="progressChange($event, job)" min="0" max="100" show-value /></label>
 								</view>
-								<button style="width: 22px; height: 22px; line-height: 22px; padding: 0px 2px; margin:8px 2px 5px 0px" @click="change">+</button>	
+								<button style="width: 22px; height: 22px; line-height: 22px; padding: 0px 2px; margin:8px 2px 5px 0px" @click="clickAM(job, 1)">+</button>	
 								
 								<view style="height: 40px; width: 35px; margin-left: 8px; padding-top: 0px;">
 									<checkbox-group name="checkbox">
 										<label  style="float: right;">
 											<text style="font-size: 14px"> </text>
-											<checkbox value="checkbox1" style="padding: 4px 8px 0px 5px" disabled="false" checked="true" />
+											<checkbox @click="clickCheck(job)" style="padding: 4px 8px 0px 5px" disabled="false" :checked="job.progress==100" />
 										</label>
 									</checkbox-group>
 								</view>
-
-
-
-
                             </view>
-
+    
                             <!-- 备注 -->
                             <view class="uni-title" style="font-size: 30rpx; color: #999; text-align: left; padding: 6px 24px;">内容</view>
                             <view class="uni-textarea" style="margin: 10px 10px 10px 25px">
-                                <textarea style="background: #fff; width: 100%; height: 75px;font-size: 30rpx" :value="job.content"
-                                            placeholder-style="color:#ccc" :placeholder="category==0 ? '详细工作内容' : '详细计划内容'"/>
+                                <textarea style="background: #fff; width: 100%; height: 75px;font-size: 30rpx; color: #777; font-size: 12px;" 
+									v-model="job.content" placeholder-style="color:#ccc" :placeholder="category==0 ? '详细工作内容' : '详细计划内容'"/>
                             </view>
                         </view>
                     </uni-collapse-item>
@@ -101,14 +93,10 @@
                 Types: Types,
 				options: [{
 						text: '取消',
-						style: {
-							backgroundColor: '#007aff'
-						}
+						style: { backgroundColor: '#007aff' }
 					}, {
 						text: '删除',
-						style: {
-							backgroundColor: '#dd524d'
-						}
+						style: { backgroundColor: '#dd524d' }
 					}
                 ]
 			}
@@ -175,11 +163,13 @@
 				}
 				console.log(job);
 			},
-			progressChange (e, job) {
-				// 该文本框控件并不会真的双向绑定
-				let value = job.progress = parseInt(e);
+			// 统一设置任务进度过程
+			setProgress (job, value) {
+				if (value > 100) value = 100;
+				if (value < 0) value = 0;
+				this.$set(job, 'progress', value);
 				if (value < job.preProgress) {
-					// this.$set(job, 'progress', job.preProgress);
+					this.$set(job, 'progress', job.preProgress);
 					// this.$forceUpdate();
 					uni.showToast({
 						title: "当前进度不能小于历史值！ \n若有变更，请至项目管理中修改计划",
@@ -188,6 +178,24 @@
 							fontSize: "12px"
 						}
 					});
+				}
+			},
+			progressChange (e, job) {
+				// 该文本框控件并不会真的双向绑定
+				let value = parseInt(e.target.value);
+				this.setProgress(job, value);
+			},
+			// 加减进度
+			clickAM (job, num) {
+				let value = parseInt(job.progress) + num;
+				this.setProgress(job, value);
+			},
+			// 点击进度完成按钮
+			clickCheck (job) {
+				if (parseInt(job.progress) < 100) {
+					this.$set(job, 'progress', 100);
+				} else {
+					this.$set(job, 'progress', job.preProgress);
 				}
 			},
 			// 滑动删除按钮检测

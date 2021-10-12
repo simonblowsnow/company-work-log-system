@@ -33,7 +33,7 @@ let Types = [
     }, {
         code: 3,
         name: '外出',
-        options: Options([['地点', 1], ['事项', 2]]),
+        options: Options([['项目', 0], ['事项', 1], ['地点', 2]]),
         value: 'out'
     }, {
         code: 4,

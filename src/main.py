@@ -1,6 +1,6 @@
 #coding: utf8
 
-
+import json
 from flask import Flask, request, current_app, g
 from flask_cors import *
 from src.login import auth_required, web_login_common, login_out, get_auth_code
@@ -10,6 +10,7 @@ from src.common.response import NormalResponseJson, ErrorResponseJson, ErrorResp
 import src.project as P
 import src.module as M
 import src.task as T
+import src.record as RC
 
 
 app = Flask(__name__)
@@ -134,6 +135,31 @@ def _get_task_control(user, R):
     
     return NormalResponseJson(data)
 
+@app.route('/submitReport', methods=['GET', 'POST'])
+@auth_required('lv0')    
+def submit_report(user, R):
+    params = R.get('params', '{}')
+    data = json.loads(params, encoding="utf8")
+    if not data: return ErrorResponseJson("参数错误")
+    
+    jobs = data.get('jobs', [])
+    plans = data.get('plans', [])
+    
+    RC.submit_record(user, jobs, plans)
+    
+    # params
+    
+    # d = R.to_dict()
+    
+    
+    # data = T.get_task_control(tid, multi, user)
+    
+    # for job in jobs:
+    #     print(job)
+    # print(plans)
+    
+    res = []
+    return NormalResponseJson(res)
 
 
 if __name__ == '__main__':

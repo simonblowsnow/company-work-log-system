@@ -26,10 +26,12 @@ def get_task_control(t_id, multi, user, db=None):
                 1.若有最新变更记录（变更后个人未提交过日志），则以记录中进度值为最小值；
                 2.若无最新变更记录，则以个人历史最后记录为最小值，无记录则为0；
             二、协作任务：
-                1）若有最新变更记录（变更后协作的人均为提交过日志），则以记录中进度值为最小值；
+                1）若有最新变更记录（变更后协作的人均未提交过日志），则以记录中进度值为最小值；
                 2）若无最新变更记录：
                 1.若当日有人提交过记录，则以此值为最终值，不可编辑；
                 2.若当日无人提交过记录，则以个人历史最后记录为最小值，无记录则为0；
+        二次修改：
+            是否协作任务的逻辑可以统一，以任务为导向，不管人
     '''
     '''取任务下所有人的最后提交记录'''
     sqlR = '''select a.user, createTime, progress from record_day a right join 
@@ -40,6 +42,11 @@ def get_task_control(t_id, multi, user, db=None):
           (select executor, max(createTime) tm from plan_change b where taskId=%s group by executor) b
         on b.executor=a.executor and a.createTime=b.tm and taskId=%s  
     '''
+    '''===========================统一协作任务，且以任务为导向==============================='''
+    
+    
+    
+    
     records, plans = {}, {}
     max_time_r, max_time_p, progress_r, progress_p, time_r = None, None, None, None, None
     for (user, create_time, progress) in db.selectEx(sqlR, (t_id, t_id)):
@@ -77,7 +84,9 @@ def get_task_control(t_id, multi, user, db=None):
     
     return info
     
-    
+'''
+进度控制：本日进度不能小于历史进度，但可修改计划
+'''    
 def get_task_list(mid, create_user, category, department):
     db = Database()
     keys = ['id', 'name', 'moduleId', 'createUser', 'status', 'executor', 'createTime', 'description',

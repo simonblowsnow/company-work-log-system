@@ -1,0 +1,30 @@
+2021-10-12 12:14:30,925 - main.py[line:159] - INFO: server start on: 9406 !
+2021-10-12 12:15:12,541 - main.py[line:159] - INFO: server start on: 9406 !
+2021-10-12 12:20:34,226 - main.py[line:164] - INFO: server start on: 9406 !
+2021-10-12 12:21:10,418 - main.py[line:164] - INFO: server start on: 9406 !
+2021-10-12 12:21:30,812 - main.py[line:164] - INFO: server start on: 9406 !
+2021-10-12 12:21:35,115 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 12:21:37,215 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 12:22:19,472 - main.py[line:164] - INFO: server start on: 9406 !
+2021-10-12 14:36:40,550 - main.py[line:166] - INFO: server start on: 9406 !
+2021-10-12 14:36:45,481 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:36:47,576 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:36:48,025 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:36:48,588 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:36:51,456 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:36:52,044 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:37:01,256 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:37:01,856 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:47:18,868 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:47:19,435 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:56:15,733 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:56:16,312 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:58:25,640 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:58:26,203 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:58:48,956 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:58:49,543 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:58:59,279 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:58:59,851 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 14:59:04,950 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 14:59:05,513 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:11:35,969 - main.py[line:166] - INFO: server start on: 9406 !
