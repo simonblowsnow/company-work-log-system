@@ -9,37 +9,49 @@ Author: Simon
 from datetime import datetime
 from src.libs.database import Database
 from src.common.base import Task, WorkRecord
- 
+import src.task as T
+
 
 def submit_record(user, jobs, plans):
     db = Database()
     comands = []
-    tids = set()
-    for job in jobs: 
-        w = WorkRecord()
-        w.load_data(user, job)
-        sql, params = w.get_sql()
-        comands.append([sql, params])
-        
-        if w.task_id in tids: return False, "任务项重复！"
-        tids.add(w.task_id)
     
-    tids = set()
-    for job in jobs:
-        w = WorkRecord()
-        w.load_data(user, job)
-        
-        if int(w.task_id) == -1: continue
-        if w.task_id in tids: return False, "计划项重复！"
-        tids.add(w.task_id)
-        
+    jps, keys, texts = [{}, {}], ["job", "plan"], ["任务", "计划"]
+    for i, rs in enumerate([jobs, plans]):  
+        for r in rs: 
+            w = WorkRecord()
+            w.load_data(user, r)
+            sql, params = w.get_sql()
+            comands.append([sql, params])
+            
+            if int(w.task_id) == -1: continue
+            if w.task_id in jps[i]: return False, "%s项重复！" % texts[i]
+            jps[i][w.task_id] = w.progress 
+            
+            flag, msg = check_record(w, jps[0], db, keys[i])
+            if not flag: return flag, msg 
+        '''End For 2'''
+    '''End For 1'''
+    
     flag, data = db.Transaction(comands)
     
     return flag, data
 
-def check_plan(tids, db):
-    sql = "select taskId, max(progress) from record_day where taskId in (2) group by taskId"
+
+def check_record(record, jps, db, key="plan"):
+    word = {'plan': "计划", 'job': "完成"}[key]
+    tid, p, user = record.task_id, record.progress, record.user
+    '''计划进度不能小于本日进度'''
+    if key=="plan" and p < jps.get(tid, 0): 
+        return False, "任务的计划进度不能小于本日完成进度！"
     
+    info = T.get_task_control(tid, user, db)
+    if p < info['min']: 
+        return False, "%s进度不能小于当前进度，请核对或先进行任务计划变更！" % word
+    if key=="job" and info['progress'] != None: 
+        return False, "该任务进度本日已有协作成员提交，请核对或先进行任务计划变更！"
+    
+    return True, "核验通过"
 
 def create_record(user, category, task_id, module_id, project_id, workday, \
                   progress, content="", mark="", leader=""):

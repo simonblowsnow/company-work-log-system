@@ -131,7 +131,7 @@ def _get_task_control(user, R):
     tid = R.get('tid', '')
     multi = int(R.get('multi'))
     
-    data = T.get_task_control(tid, multi, user)
+    data = T.get_task_control(tid, user)
     
     return NormalResponseJson(data)
 
@@ -145,7 +145,9 @@ def submit_report(user, R):
     jobs = data.get('jobs', [])
     plans = data.get('plans', [])
     
-    RC.submit_record(user, jobs, plans)
+    flag, data = RC.submit_record(user, jobs, plans)
+    
+    print(flag, data)
     
     # params
     

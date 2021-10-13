@@ -28,3 +28,22 @@
 2021-10-12 14:59:04,950 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
 2021-10-12 14:59:05,513 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
 2021-10-12 15:11:35,969 - main.py[line:166] - INFO: server start on: 9406 !
+2021-10-12 15:14:49,240 - main.py[line:166] - INFO: server start on: 9406 !
+2021-10-12 15:20:46,671 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:20:47,233 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:20:51,747 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:20:52,358 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:21:25,755 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:21:26,306 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:21:29,076 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:21:29,650 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:21:33,890 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:21:34,442 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:22:59,381 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:22:59,963 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 15:35:40,053 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 15:35:40,635 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 17:47:10,665 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 17:47:11,890 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-12 17:47:16,733 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-12 17:47:17,898 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1

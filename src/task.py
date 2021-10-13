@@ -16,77 +16,65 @@ def create_task(project_id, module_id, create_user, name, is_multi, plan_end_tim
     flag = m.create()
     return flag if flag != -1 else False
 
+'''TODO：兼容凌晨提交日志情况'''
 def is_today(tm):
     return tm.strftime('%Y-%m-%d') == datetime.now().strftime('%Y-%m-%d')
-    
-def get_task_control(t_id, multi, user, db=None):
-    if not db: db = Database()
-    ''' 进度说明：
-            一、非协作任务：
-                1.若有最新变更记录（变更后个人未提交过日志），则以记录中进度值为最小值；
-                2.若无最新变更记录，则以个人历史最后记录为最小值，无记录则为0；
-            二、协作任务：
-                1）若有最新变更记录（变更后协作的人均未提交过日志），则以记录中进度值为最小值；
-                2）若无最新变更记录：
-                1.若当日有人提交过记录，则以此值为最终值，不可编辑；
-                2.若当日无人提交过记录，则以个人历史最后记录为最小值，无记录则为0；
-        二次修改：
-            是否协作任务的逻辑可以统一，以任务为导向，不管人
-    '''
-    '''取任务下所有人的最后提交记录'''
-    sqlR = '''select a.user, createTime, progress from record_day a right join 
-            (select user, max(createTime) tm from record_day where taskId=%s group by user) b
-        on b.user=a.user and b.tm=a.createTime and taskId=%s'''  
-    '''取任务下所有人的最新变更记录'''
-    sqlP = '''select a.executor, createTime, progress, multiUser from plan_change a right join 
-          (select executor, max(createTime) tm from plan_change b where taskId=%s group by executor) b
-        on b.executor=a.executor and a.createTime=b.tm and taskId=%s  
-    '''
-    '''===========================统一协作任务，且以任务为导向==============================='''
-    
-    
-    
-    
-    records, plans = {}, {}
-    max_time_r, max_time_p, progress_r, progress_p, time_r = None, None, None, None, None
-    for (user, create_time, progress) in db.selectEx(sqlR, (t_id, t_id)):
-        records[user] = {'time': create_time, 'progress': progress}
-        if not max_time_r or max_time_r < create_time: 
-            max_time_r, progress_r, time_r = create_time, progress, create_time 
-        
-    for (user, tm, progress, _) in db.selectEx(sqlP, (t_id, t_id)):
-        plans[user] = {'time': tm, 'progress': progress}
-        if not max_time_p or max_time_p < tm: max_time_p, progress_p = tm, progress
-        
-    info = {'min': 0, 'progress': None}
-    if not multi:
-        '''个人未提交过记录'''
-        if user not in records:
-            info['min'] = plans[user]['progress'] if user in plans else 0   
-        else:
-            '''有最新计划变更记录'''
-            if user in plans and plans[user]['time'] > records[user]['time']: 
-                info['min'] = plans[user]['progress']
-            else:
-                info['min'] = records[user]['progress']
-    else:
-        '''团队无人提交过记录'''
-        if not max_time_r:
-            info['min'] = progress_p if progress_p else 0  
-        else:
-            '''有最新计划变更记录'''    
-            if max_time_p and max_time_p > max_time_r:
-                info['min'] = progress_p
-            else:
-                info['min'] = progress_r
-                if is_today(time_r): info['progress'] = progress_r
-    '''End If'''  
-    
-    return info
-    
+
+
 '''
 进度控制：本日进度不能小于历史进度，但可修改计划
-'''    
+进度说明：
+        一、非协作任务：
+            1.若有最新变更记录（变更后个人未提交过日志），则以记录中进度值为最小值；
+            2.若无最新变更记录，则以个人历史最后记录为最小值，无记录则为0；
+        二、协作任务：
+            1）若有最新变更记录（变更后协作的人均未提交过日志），则以记录中进度值为最小值；
+            2）若无最新变更记录：
+            1.若当日有人提交过记录，则以此值为最终值，不可编辑；
+            2.若当日无人提交过记录，则以个人历史最后记录为最小值，无记录则为0；
+    二次修改：
+        是否协作任务的逻辑可以统一，以任务为导向，不管人
+
+'''        
+def get_task_control(t_id, user=None, db=None):
+    if not db: db = Database()
+    
+    '''取任务下所有人的最后提交记录'''
+    sqlR = '''select r.user, updateTime, progress from record_day r right join (
+        select max(updateTime) tm from record_day where taskId=%s
+    ) a on r.updateTime=a.tm where taskId=%s order by progress desc limit 1
+    '''
+    '''取任务下的最新变更记录'''
+    sqlP = '''select a.executor, updateTime, progress, multiUser from plan_change a right join 
+          (select max(updateTime) tm from plan_change b where taskId=%s) b
+        on a.updateTime=b.tm where taskId=%s order by progress limit 1  
+    '''
+    rec = db.selectLine(sqlR, (t_id, t_id))
+    pla = db.selectLine(sqlP, (t_id, t_id))
+    
+    '''逻辑说明：
+        1.无计划变更则以最后提交为准，无则为0
+        2.有计划变更则以最新时间对应的进度为准
+        注：提交时需检查进度合法性
+        progress - 是否协作任务且今日已由其他人设置。
+        注：若有最新计划变更，则协作任务不受其他成员今日进度限制
+    '''
+    info = {'min': 0, 'progress': None}
+    if rec:
+        ru, rt, rp = rec
+        info['min'] = rp
+        '''今日他人已设置'''
+        if user != ru and is_today(rt): info['progress'] = rp
+        '''有计划则看时间'''
+        if pla and pla[1] > rt: info['min'], info['progress'] = pla[2], None  
+    else:
+        '''无提交但有计划变更，则以计划为准'''
+        if pla: info['min'] = pla[2] 
+    '''End If'''
+    
+    return info
+   
+   
 def get_task_list(mid, create_user, category, department):
     db = Database()
     keys = ['id', 'name', 'moduleId', 'createUser', 'status', 'executor', 'createTime', 'description',
@@ -105,7 +93,7 @@ def get_task_list(mid, create_user, category, department):
         params.append(category)
     if department != '': 
         sql += " and department=%s"
-    sql += " order by createTime, status desc"
+    sql += " order by updateTime, status desc"
     
     data = db.read_all(sql, params)
     for line in data: 
@@ -160,4 +148,6 @@ if __name__ == '__main__':
 #     get_task_record(1, "admin")
 #     print(add_change("admin", 1, "2020-10-31", 32, "啊大大"))
 #     print(get_task_record(1, 1, ""))
+    get_task_control(2)
+    
     pass
