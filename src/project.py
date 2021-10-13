@@ -11,7 +11,15 @@ from src.common.base import Project
 
 def create_project(create_user, name, description=""):
     p = Project(None, name, create_user, description)
-    flag = p.create() 
+    flag = p.create()
+    '''=============================TODO: 自动创建模块================================='''
+    if flag != -1:
+        pass
+    
+    
+    
+    
+    
     return flag if flag != -1 else False
 
 def get_project_list(create_user, category, department, page = 0, size = 26):

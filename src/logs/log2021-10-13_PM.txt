@@ -1,0 +1,7 @@
+2021-10-13 18:37:00,965 - main.py[line:168] - INFO: server start on: 9406 !
+2021-10-13 18:37:14,537 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-13 18:37:16,598 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-13 18:37:16,912 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-13 18:37:17,504 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1
+2021-10-13 18:37:20,658 - login.py[line:29] - INFO: user admin login from ip: 127.0.0.1
+2021-10-13 18:37:21,238 - login.py[line:123] - INFO: User Login: admin, 127.0.0.1

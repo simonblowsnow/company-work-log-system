@@ -22,6 +22,7 @@ class Project():
         sql = "insert into project (name, createUser, description) values (%s, %s, %s)"
         flag = db.execute(sql, (self.name, self.create_user, self.description))
         
+        print(flag)
         return flag
     
 class Module():
@@ -114,4 +115,8 @@ class WorkRecord():
         return flag
         
         
+p = Project("项目A", "lily", "Hello")
+p.create()
+
+
         
