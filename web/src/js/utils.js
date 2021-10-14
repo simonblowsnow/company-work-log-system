@@ -38,7 +38,7 @@ function ajax (key, data, toast) {
                         title: res[1].data.message,
                         icon: 'error',
                         mask: true,
-                        duration: 1000
+                        duration: 3500
                     });
 
                 } else {

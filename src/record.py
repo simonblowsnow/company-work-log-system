@@ -12,6 +12,11 @@ from src.common.base import Task, WorkRecord
 import src.task as T
 
 
+
+def has_submit(user, db):
+    sql = "select from "
+
+
 def submit_record(user, jobs, plans):
     db = Database()
     comands = []
@@ -21,9 +26,12 @@ def submit_record(user, jobs, plans):
         for r in rs: 
             w = WorkRecord()
             w.load_data(user, r)
-            sql, params = w.get_sql()
+            sql, params = w.get_sql(i)
             comands.append([sql, params])
             
+            if w.task_id == None:
+                if w.task == "": return False, "任务不能为空！" 
+                continue 
             if int(w.task_id) == -1: continue
             if w.task_id in jps[i]: return False, "%s项重复！" % texts[i]
             jps[i][w.task_id] = w.progress 
@@ -34,6 +42,7 @@ def submit_record(user, jobs, plans):
     '''End For 1'''
     
     flag, data = db.Transaction(comands)
+    if not flag: data = "请检查数据问题或今日是否已提交"
     
     return flag, data
 

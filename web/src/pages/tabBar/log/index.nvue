@@ -116,6 +116,8 @@
 				let [error, warn] = ['', ''];
 				for (let i = 0; i < this.jobs.length; i++) {
 					let e = this.jobs[i];
+					// 约束条件
+					let limit = Types[e.type].limit;
 					if (e.pid === -1 || e.mid === -1 || e.tid === -1) {
 						error = '第' + Numbers[i] + '项的信息不完整，请检查！';
 						break;

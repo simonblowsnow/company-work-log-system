@@ -6,19 +6,15 @@ Author: Simon
 ==================================================================================
 '''
 from src.libs.database import Database 
-from src.common.base import Project
+from src.common.base import Project, Module
 
 
 def create_project(create_user, name, description=""):
     p = Project(None, name, create_user, description)
     flag = p.create()
-    '''=============================TODO: 自动创建模块================================='''
     if flag != -1:
-        pass
-    
-    
-    
-    
+        t = Module(flag, None, "其它", create_user)
+        t.create()
     
     return flag if flag != -1 else False
 

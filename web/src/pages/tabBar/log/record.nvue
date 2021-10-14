@@ -111,8 +111,8 @@
 				});
 			},
 			// 请求任务列表
-			getTaskList (pid, mid) {
-				Utils.ajax("/listTask", {mid: mid}).then( res => {
+			getTaskList (pid, mid, job) {
+				Utils.ajax("/listTask", {mid: mid, pid: pid, project: job.project}).then( res => {
 					let k = pid + "_" + mid;
 					let tasks = res.data.reduce((a, b) => { a[b.name] = b; return a; }, {});
 					this.$set(this.taskNames, k, res.data.map(d => d.name));
@@ -131,25 +131,32 @@
 			},
 			// 用户输入项目、模块、任务
 			inputChange (job, level) {
+				let noModule = Types[job.type].limit.length < 3;
 				if (level === 0) {
 					[job.pid, job.mid, job.tid] = [-1, -1, -1];
 					[job.module, job.task] = ["", ""];
 					if (job.project in this.projects) {
 						job.pid = this.projects[job.project].id;
-						this.getModuleList(job.pid);
+						if (!noModule) {
+							this.getModuleList(job.pid);
+						} else {
+							this.getTaskList(job.pid, -1, job);
+						}
 					}
 				} else if (level === 1) {
 					[job.mid, job.tid, job.task] = [-1, -1, ""];
 					if (this.modules[job.pid] && (job.module in this.modules[job.pid])) {
 						job.mid = this.modules[job.pid][job.module].id;
-						this.getTaskList(job.pid, job.mid);
+						this.getTaskList(job.pid, job.mid, job);
 					}
 				} else if (level === 2) {
 					job.tid = -1;
 					let k = job.pid + "_" + job.mid;
 					if (this.tasks[k] && (job.task in this.tasks[k])) {
-						job.tid = this.tasks[k][job.task].id;
 						let task = this.tasks[k][job.task];
+						job.tid = task.id;
+						// 无模块选择情况，直接加载任务，若任务为标准任务则自动设置其模块ID
+						if (task.mid && task.mid.toString() !== -1) job.mid = task.mid;
 						this.getTaskStatus(job, task);
 					}
 				}

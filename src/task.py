@@ -73,7 +73,37 @@ def get_task_control(t_id, user=None, db=None):
     '''End If'''
     
     return info
-   
+
+def fid(id_):
+    return -1 if id_ == None else id_
+
+'''则从日志提交记录取数据'''
+def get_task_hint(user, pid=None, project=None):
+    if project == "": project = None
+    if not pid and not project: return []
+    db = Database()
+    params = [user]
+    sql = '''select task, taskId, moduleId from record_day r left join user u 
+        on u.username=r.user where u.orgId=(select orgId from user where username=%s) 
+        and task is not null'''
+    if pid == None or int(pid) == -1:
+        sql += " and project=%s"
+        params.append(project)
+    else:
+        sql += " and projectId=%s"
+        params.append(pid)
+    sql = "select task, taskId, moduleId from ({}) a group by task, taskId, moduleId".format(sql) 
+    ts = {}
+    for task, taskId, moduleId in db.selectEx(sql, params):
+        if task not in ts: 
+            ts[task] = [taskId, moduleId]
+        else:
+            if ts[task][0] == None: ts[task] = [taskId, moduleId]  
+    '''End For'''
+    data = [{'name': k, 'id': fid(v[0]), 'mid': fid(v[1]) } for k, v in ts.items()]
+    
+    return data
+    
    
 def get_task_list(mid, create_user, category, department):
     db = Database()
@@ -81,9 +111,12 @@ def get_task_list(mid, create_user, category, department):
             'category', 'department', 'mark', 'progress', 'planEndTime', 'multiUser']
     sql, params = "select " + ','.join(keys) + ", IFNULL(uc, 0) userCount from task t left join \
         (select taskId, count(*) uc from \
-            (select taskId, user from record_day where moduleId=%s group by taskId, user) a group by taskId \
-        ) r \
-        on t.id=r.taskId where t.moduleId=%s", [mid, mid]
+            (select taskId, user from record_day where moduleId=%s group by taskId, user \
+            ) a group by taskId \
+        ) r on t.id=r.taskId \
+        left join \
+        (select taskId, max(updateTime) utm from record_day where moduleId=%s group by taskId \
+        ) b on t.id=r.taskId where t.moduleId=%s", [mid, mid, mid]
     
     if create_user != '': 
         sql += " and createUser=%s"
@@ -93,9 +126,10 @@ def get_task_list(mid, create_user, category, department):
         params.append(category)
     if department != '': 
         sql += " and department=%s"
-    sql += " order by updateTime, status desc"
+    sql += " order by utm, status desc"
     
     data = db.read_all(sql, params)
+    
     for line in data: 
         line['planEndTime'] = str(line['planEndTime'])
         line['createTime'] = str(line['createTime']) 

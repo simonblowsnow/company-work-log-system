@@ -117,11 +117,16 @@ def _create_task(user, R):
 @app.route('/listTask', methods=['GET', 'POST'])
 @auth_required('lv0')    
 def _list_task(user, R):
-    pid = R.get('mid', '')
+    project = R.get('project', None)
+    pid = int(R.get('pid', -1))
+    mid = int(R.get('mid', -1))
     category = R.get('category', '')
     department = R.get('department', '')
     
-    data = T.get_task_list(pid, "", category, department)
+    if mid != -1: 
+        data = T.get_task_list(mid, "", category, department)
+    else:
+        data = T.get_task_hint(user, pid, project)
     
     return NormalResponseJson(data)
 
@@ -129,7 +134,7 @@ def _list_task(user, R):
 @auth_required('lv0')    
 def _get_task_control(user, R):
     tid = R.get('tid', '')
-    multi = int(R.get('multi'))
+    multi = R.get('multi')
     
     data = T.get_task_control(tid, user)
     
@@ -146,22 +151,9 @@ def submit_report(user, R):
     plans = data.get('plans', [])
     
     flag, data = RC.submit_record(user, jobs, plans)
+    if not flag: return ErrorResponseJson("提交失败:" + data)
     
-    print(flag, data)
-    
-    # params
-    
-    # d = R.to_dict()
-    
-    
-    # data = T.get_task_control(tid, multi, user)
-    
-    # for job in jobs:
-    #     print(job)
-    # print(plans)
-    
-    res = []
-    return NormalResponseJson(res)
+    return NormalResponseJson(data)
 
 
 if __name__ == '__main__':

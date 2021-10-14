@@ -9,6 +9,10 @@ Author: Simon
 from datetime import datetime
 from src.libs.database import Database 
 
+'''TODO：判断日报所属日期'''
+def workday(tm):
+    pass
+
 
 class Project():
     def __init__(self, id_=None, name="", create_user="", description=""):
@@ -99,14 +103,15 @@ class WorkRecord():
         self.mark = mark 
         self.leader = leader
     
-    def get_sql(self):
-        sql = '''insert into record_day (user, workday, category, projectId, moduleId, taskId,
+    def get_sql(self, idx=0):
+        table = "plan_day" if idx else "record_day" 
+        sql = '''insert into {} (user, workday, category, projectId, moduleId, taskId,
             task, progress, content, mark, leader) values 
             (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         '''
         params = (self.user, self.workday, self.category, self.project_id, self.module_id, 
                                 self.task_id, self.task, self.progress, self.content, self.mark, self.leader)
-        return sql, params
+        return sql.format(table), params
      
     def create(self):
         db = Database()
@@ -114,9 +119,9 @@ class WorkRecord():
         flag = db.execute(sql, params)
         return flag
         
-        
-p = Project("项目A", "lily", "Hello")
-p.create()
+    
+# p = Project("项目A", "lily", "Hello")
+# p.create()
 
 
         
